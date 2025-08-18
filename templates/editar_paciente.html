@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Editar Paciente - CARE</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        form { max-width: 600px; }
+        label { display: block; margin: 10px 0 5px; }
+        input, select { width: 100%; padding: 8px; margin-bottom: 10px; }
+        button { background: #0066cc; color: white; padding: 10px 20px; border: none; }
+        .checkbox-list { margin: 15px 0; }
+        .checkbox-list div { margin: 5px 0; }
+        .btn { display: inline-block; padding: 8px 16px; text-decoration: none; margin: 5px 0; }
+        .btn-volver { background: #6c757d; color: white; }
+        .info { font-size: 0.9em; color: #666; }
+    </style>
+</head>
+<body>
+    <h1>Editar Paciente</h1>
+    <form method="POST">
+        <label>Nombre completo:</label>
+        <input type="text" name="nombre" value="{{ paciente.nombre }}" required>
+
+        <label>Fecha de nacimiento (AAAA-MM-DD):</label>
+        <input type="date" name="fecha_nac" value="{{ paciente.fecha_nacimiento }}" required>
+
+        <label>Sexo:</label>
+        <select name="sexo" required>
+            <option value="M" {% if paciente.sexo == "M" %}selected{% endif %}>Hombre</option>
+            <option value="F" {% if paciente.sexo == "F" %}selected{% endif %}>Mujer</option>
+            <option value="O" {% if paciente.sexo == "O" %}selected{% endif %}>Otro</option>
+        </select>
+
+        <label>Diagnóstico (opcional):</label>
+        <input type="text" name="diagnostico" value="{{ paciente.diagnostico }}">
+
+        <label>Médico solicitante:</label>
+        <input type="text" name="medico" value="{{ paciente.medico }}" required>
+
+        <h3>Agregar más estudios</h3>
+        <div class="checkbox-list">
+            {% for p in pruebas %}
+            <div>
+                <input 
+                    type="checkbox" 
+                    name="pruebas" 
+                    value="{{ p.clave }}" 
+                    id="prueba_{{ p.clave }}"
+                >
+                <label for="prueba_{{ p.clave }}">
+                    {{ p.nombre }} 
+                    - ${{ precios.get('prueba_' + p.clave, 0) }}
+                    ({{ 
+                        contenedores | selectattr('id', 'equalto', p.id_contenedor) | map(attribute='nombre') | first 
+                    }})
+                </label>
+            </div>
+            {% endfor %}
+        </div>
+
+        <button type="submit">Guardar Cambios</button>
+        <a href="/" class="btn btn-volver">Cancelar</a>
+    </form>
+
+    <h3>Estudios actuales</h3>
+    {% if paciente.estudios %}
+    <ul>
+        {% for e in paciente.estudios %}
+        <li>{{ e.nombre }} - ${{ e.precio }}</li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="info">No tiene estudios asignados.</p>
+    {% endif %}
+</body>
+</html>
