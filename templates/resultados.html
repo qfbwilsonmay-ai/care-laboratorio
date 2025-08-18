@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Resultados - {{ paciente.nombre }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { padding: 10px; border: 1px solid #ccc; }
+        .btn { background: #0066cc; color: white; padding: 10px; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <h1>Resultados - {{ paciente.nombre }}</h1>
+    <p><strong>Folio:</strong> {{ paciente.folio }} | <strong>Edad:</strong> {{ paciente.edad }} | <strong>Médico:</strong> {{ paciente.medico }}</p>
+
+    <h2>Agregar Resultado</h2>
+    <form method="POST">
+        <label>Prueba:</label>
+        <select name="prueba" required>
+            {% for p in pruebas %}
+            <option value="{{ p.clave }}">{{ p.nombre }} ({{ p.unidad }})</option>
+            {% endfor %}
+        </select>
+
+        <label>Resultado:</label>
+        <input type="text" name="resultado" required>
+
+        <button type="submit">Guardar Resultado</button>
+    </form>
+
+    <h2>Resultados Registrados</h2>
+    <table>
+        <tr>
+            <th>Prueba</th>
+            <th>Resultado</th>
+            <th>Unidad</th>
+            <th>Valores Normales</th>
+            <th>Fecha</th>
+        </tr>
+        {% for r in resultados %}
+        <tr>
+            <td>{{ r.nombre }}</td>
+            <td>{{ r.resultado }}</td>
+            <td>{{ r.unidad }}</td>
+            <td>{{ r.valores_normales }}</td>
+            <td>{{ r.fecha }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <a href="/" class="btn">← Inicio</a>
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Registrar Paciente - CARE</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        form { max-width: 500px; }
+        label { display: block; margin: 10px 0 5px; }
+        input, select { width: 100%; padding: 8px; margin-bottom: 10px; }
+        button { background: #0066cc; color: white; padding: 10px 20px; border: none; }
+    </style>
+</head>
+<body>
+    <h1>Registrar Paciente</h1>
+    <form method="POST">
+        <label>Nombre completo:</label>
+        <input type="text" name="nombre" required>
+
+        <label>Fecha de nacimiento (AAAA-MM-DD):</label>
+        <input type="date" name="fecha_nac" required>
+
+        <label>Sexo:</label>
+        <select name="sexo" required>
+            <option value="M">Masculino</option>
+            <option value="F">Femenino</option>
+            <option value="O">Otro</option>
+        </select>
+
+        <label>Diagnóstico (opcional):</label>
+        <input type="text" name="diagnostico">
+
+        <label>Médico solicitante:</label>
+        <input type="text" name="medico" required>
+
+        <button type="submit">Registrar</button>
+    </form>
+    <a href="/">← Volver</a>
+</body>
+</html>

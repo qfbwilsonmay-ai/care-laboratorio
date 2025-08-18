@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CARE - Inicio</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
+        th { background-color: #f2f2f2; }
+        a { margin: 5px; text-decoration: none; color: #0066cc; }
+        .btn { display: inline-block; padding: 8px 16px; background: #0066cc; color: white; border: none; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>CARE - Laboratorio Clínico</h1>
+    <a href="/registro" class="btn">Registrar Paciente</a>
+    <h2>Pacientes Registrados</h2>
+    <table>
+        <tr>
+            <th>Folio</th>
+            <th>Nombre</th>
+            <th>Edad</th>
+            <th>Sexo</th>
+            <th>Médico</th>
+            <th>Acciones</th>
+        </tr>
+        {% for p in pacientes %}
+        <tr>
+            <td>{{ p.folio }}</td>
+            <td>{{ p.nombre }}</td>
+            <td>{{ p.edad }}</td>
+            <td>{{ p.sexo }}</td>
+            <td>{{ p.medico }}</td>
+            <td><a href="/resultados/{{ p.folio }}">Resultados</a></td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
