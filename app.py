@@ -20,11 +20,12 @@ def cargar_catalogos():
     contenedores = cargar_datos('datos/contenedores.json')
     precios = cargar_datos('datos/precios.json')
     
-    # Crear diccionario de precios públicos
+    # Crear diccionario de precios por clave
     precios_dict = {}
     for p in precios:
         key = f"{p['tipo']}_{p['id_elemento']}"
         precios_dict[key] = p
+    
     return pruebas, contenedores, precios, precios_dict
 
 @app.route('/')
@@ -66,9 +67,10 @@ def registro():
                 if not precio_data:
                     precio_final = 0
                 else:
-                    precio_final = precio_data.get('precio_publico_matriz', 0)
                     if laboratorios[clave] == 'sigma':
                         precio_final = precio_data.get('precio_publico_sigma', 0)
+                    else:
+                        precio_final = precio_data.get('precio_publico_matriz', 0)
 
                 estudios.append({
                     "clave": clave,
@@ -140,9 +142,13 @@ def editar_paciente(folio):
                 prueba = next((p for p in pruebas if p['clave'] == clave), None)
                 if prueba:
                     precio_data = precios_dict.get(f"prueba_{clave}")
-                    precio_final = precio_data.get('precio_publico_matriz', 0) if precio_data else 0
-                    if laboratorios[clave] == 'sigma':
-                        precio_final = precio_data.get('precio_publico_sigma', 0) if precio_data else 0
+                    if not precio_data:
+                        precio_final = 0
+                    else:
+                        if laboratorios[clave] == 'sigma':
+                            precio_final = precio_data.get('precio_publico_sigma', 0)
+                        else:
+                            precio_final = precio_data.get('precio_publico_matriz', 0)
 
                     nuevos_estudios.append({
                         "clave": clave,

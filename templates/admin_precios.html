@@ -76,9 +76,13 @@
                 <!-- Ganancia -->
                 <td><input type="number" step="0.1" name="ganancia_{{ loop.index }}" value="{{ precio.ganancia_porcentaje if precio.ganancia_porcentaje else 50 }}" class="ganancia" data-idx="{{ loop.index }}" required {{ 'readonly' if validado else '' }}></td>
                 <!-- Precio Sugerido (Matriz) -->
-                <td class="sugerido" id="sugerido_matriz_{{ loop.index }}">{{ "%.2f"|format(precio.precio_sugerido_matriz if precio.precio_sugerido_matriz else 0) }}</td>
+                <td class="sugerido" id="sugerido_matriz_{{ loop.index }}">
+                    {{ "%.2f"|format(precio.precio_sugerido_matriz if precio.precio_sugerido_matriz else 0) }}
+                </td>
                 <!-- Precio Sugerido (SIGMA) -->
-                <td class="sugerido" id="sugerido_sigma_{{ loop.index }}">{{ "%.2f"|format(precio.precio_sugerido_sigma if precio.precio_sugerido_sigma else 0) }}</td>
+                <td class="sugerido" id="sugerido_sigma_{{ loop.index }}">
+                    {{ "%.2f"|format(precio.precio_sugerido_sigma if precio.precio_sugerido_sigma else 0) }}
+                </td>
                 <!-- Precio Público (Matriz) -->
                 <td><input type="number" step="0.01" name="precio_publico_matriz_{{ loop.index }}" value="{{ precio.precio_publico_matriz if precio.precio_publico_matriz else 0 }}" required {{ 'readonly' if validado else '' }}></td>
                 <!-- Precio Público (SIGMA) -->
@@ -100,6 +104,7 @@
     <p><strong>Estado:</strong> Fila verde = validada. Fila blanca = pendiente.</p>
 
     <script>
+        // Calcular precios sugeridos al escribir
         function calcularSugeridos(idx) {
             const maquilaMatriz = parseFloat(document.querySelector(`[name="maquila_matriz_${idx}"]`).value) || 0;
             const materialesMatriz = parseFloat(document.querySelector(`[name="materiales_matriz_${idx}"]`).value) || 0;
@@ -119,6 +124,7 @@
             document.getElementById(`sugerido_sigma_${idx}`).textContent = sugeridoSigma.toFixed(2);
         }
 
+        // Validar fila: bloquea campos y pone verde
         function validarFila(idx) {
             const inputs = document.querySelectorAll(`#fila_${idx} input`);
             inputs.forEach(input => {
@@ -131,6 +137,7 @@
                 `<button type="button" class="btn-editar" onclick="editarFila(${idx})">Editar</button>`;
         }
 
+        // Editar fila: desbloquea campos y quita el verde
         function editarFila(idx) {
             const inputs = document.querySelectorAll(`#fila_${idx} input`);
             inputs.forEach(input => {
@@ -143,6 +150,7 @@
                 `<button type="button" class="btn-validar" onclick="validarFila(${idx})">Validar</button>`;
         }
 
+        // Escuchar cambios en costos y ganancia
         document.querySelectorAll('.costo, .ganancia').forEach(input => {
             input.addEventListener('input', function() {
                 const idx = this.getAttribute('data-idx');
@@ -150,7 +158,7 @@
             });
         });
 
-        // Calcular todos al cargar
+        // Calcular todos al cargar la página
         document.querySelectorAll('.costo').forEach(input => {
             const idx = input.getAttribute('data-idx');
             calcularSugeridos(idx);
