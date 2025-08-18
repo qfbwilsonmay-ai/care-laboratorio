@@ -107,15 +107,15 @@ def editar_paciente(folio):
         paciente['medico'] = request.form['medico']
 
         # Obtener nuevos estudios seleccionados
-        pruebas_seleccionadas = request.form.getlist('pruebas')
+        nuevos_estudios_claves = request.form.getlist('nuevos_estudios')
 
         # Cargar catálogos
         pruebas, contenedores, precios_dict = cargar_catalogos()
 
-        # Evitar duplicados y crear nuevos estudios
+        # Crear lista de nuevos estudios (sin duplicados)
         nuevos_estudios = []
         claves_existentes = [e['clave'] for e in paciente.get('estudios', [])]
-        for clave in pruebas_seleccionadas:
+        for clave in nuevos_estudios_claves:
             if clave not in claves_existentes:
                 prueba = next((p for p in pruebas if p['clave'] == clave), None)
                 if prueba:
@@ -131,6 +131,13 @@ def editar_paciente(folio):
             paciente['estudios'] = []
         paciente['estudios'].extend(nuevos_estudios)
 
+        # Eliminar estudios marcados para borrar
+        estudios_a_mantener = []
+        for estudio in paciente['estudios']:
+            if f"eliminar_{estudio['clave']}" not in request.form:
+                estudios_a_mantener.append(estudio)
+        paciente['estudios'] = estudios_a_mantener
+
         # Guardar cambios
         guardar_datos(RUTA_PACIENTES, pacientes)
 
@@ -141,14 +148,182 @@ def editar_paciente(folio):
 
     # Estudios ya asignados
     claves_asignadas = [e['clave'] for e in paciente.get('estudios', [])]
+    estudios_asignados = paciente.get('estudios', [])
+
+    # Pruebas disponibles (que no tenga el paciente)
+    pruebas_disponibles = [p for p in pruebas if p['clave'] not in claves_asignadas]
 
     return render_template(
         'editar_paciente.html',
         paciente=paciente,
-        pruebas=pruebas,
+        pruebas=pruebas_disponibles,
         contenedores=contenedores,
         precios=precios_dict,
-        claves_asignadas=claves_asignadas
+        estudios_asignados=estudios_asignados
+    )
+
+# app.py - Aplicación web CARE en Flask
+from flask import Flask, render_template, request, redirect, url_for
+import json
+import os
+from datetime import datetime
+from utils import generar_folio, calcular_edad, cargar_datos, guardar_datos
+
+app = Flask(__name__)
+
+# Rutas
+RUTA_PACIENTES = 'datos/pacientes.json'
+RUTA_RESULTADOS = 'datos/resultados.json'
+
+# Aseguramos que la carpeta 'datos' exista
+os.makedirs('datos', exist_ok=True)
+
+def cargar_catalogos():
+    """Carga los catálogos desde los archivos JSON cada vez que se llama"""
+    pruebas = cargar_datos('datos/pruebas.json')
+    contenedores = cargar_datos('datos/contenedores.json')
+    precios = cargar_datos('datos/precios.json')
+    
+    # Crear diccionario de precios
+    precios_dict = {}
+    for p in precios:
+        key = f"{p['tipo']}_{p['id_elemento']}"
+        precios_dict[key] = p['precio']
+    
+    return pruebas, contenedores, precios_dict
+
+@app.route('/')
+def index():
+    pacientes = cargar_datos(RUTA_PACIENTES)
+    return render_template('index.html', pacientes=pacientes)
+
+@app.route('/registro', methods=['GET', 'POST'])
+def registro():
+    if request.method == 'POST':
+        nombre = request.form['nombre']
+        fecha_nac = request.form['fecha_nac']
+        sexo = request.form['sexo']
+        diagnostico = request.form['diagnostico']
+        medico = request.form['medico']
+
+        # Obtener estudios seleccionados
+        pruebas_seleccionadas = request.form.getlist('pruebas')
+
+        folio = generar_folio()
+        edad = calcular_edad(fecha_nac)
+
+        # Cargar pruebas para obtener info
+        pruebas, contenedores, precios_dict = cargar_catalogos()
+
+        # Lista para guardar los estudios con su info
+        estudios = []
+        for clave in pruebas_seleccionadas:
+            prueba = next((p for p in pruebas if p['clave'] == clave), None)
+            if prueba:
+                precio = precios_dict.get(f"prueba_{clave}", 0)
+                estudios.append({
+                    "clave": clave,
+                    "nombre": prueba['nombre'],
+                    "precio": precio
+                })
+
+        paciente = {
+            "folio": folio,
+            "nombre": nombre,
+            "fecha_nacimiento": fecha_nac,
+            "edad": edad,
+            "sexo": sexo,
+            "diagnostico": diagnostico,
+            "medico": medico,
+            "estudios": estudios,
+            "fecha_registro": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }
+
+        pacientes = cargar_datos(RUTA_PACIENTES)
+        pacientes.append(paciente)
+        guardar_datos(RUTA_PACIENTES, pacientes)
+
+        return redirect(url_for('index'))
+
+    # Cargar datos para la plantilla
+    pruebas, contenedores, precios_dict = cargar_catalogos()
+    return render_template(
+        'registro.html',
+        pruebas=pruebas,
+        contenedores=contenedores,
+        precios=precios_dict
+    )
+
+@app.route('/editar_paciente/<folio>', methods=['GET', 'POST'])
+def editar_paciente(folio):
+    pacientes = cargar_datos(RUTA_PACIENTES)
+    paciente = next((p for p in pacientes if p['folio'] == folio), None)
+
+    if not paciente:
+        return "Paciente no encontrado", 404
+
+    if request.method == 'POST':
+        # Actualizar datos básicos
+        paciente['nombre'] = request.form['nombre']
+        paciente['fecha_nacimiento'] = request.form['fecha_nac']
+        paciente['sexo'] = request.form['sexo']
+        paciente['diagnostico'] = request.form['diagnostico']
+        paciente['medico'] = request.form['medico']
+
+        # Obtener nuevos estudios seleccionados
+        nuevos_estudios_claves = request.form.getlist('nuevos_estudios')
+
+        # Cargar catálogos
+        pruebas, contenedores, precios_dict = cargar_catalogos()
+
+        # Crear lista de nuevos estudios (sin duplicados)
+        nuevos_estudios = []
+        claves_existentes = [e['clave'] for e in paciente.get('estudios', [])]
+        for clave in nuevos_estudios_claves:
+            if clave not in claves_existentes:
+                prueba = next((p for p in pruebas if p['clave'] == clave), None)
+                if prueba:
+                    precio = precios_dict.get(f"prueba_{clave}", 0)
+                    nuevos_estudios.append({
+                        "clave": clave,
+                        "nombre": prueba['nombre'],
+                        "precio": precio
+                    })
+
+        # Añadir nuevos estudios
+        if 'estudios' not in paciente:
+            paciente['estudios'] = []
+        paciente['estudios'].extend(nuevos_estudios)
+
+        # Eliminar estudios marcados para borrar
+        estudios_a_mantener = []
+        for estudio in paciente['estudios']:
+            if f"eliminar_{estudio['clave']}" not in request.form:
+                estudios_a_mantener.append(estudio)
+        paciente['estudios'] = estudios_a_mantener
+
+        # Guardar cambios
+        guardar_datos(RUTA_PACIENTES, pacientes)
+
+        return redirect(url_for('index'))
+
+    # Cargar datos para la plantilla
+    pruebas, contenedores, precios_dict = cargar_catalogos()
+
+    # Estudios ya asignados
+    claves_asignadas = [e['clave'] for e in paciente.get('estudios', [])]
+    estudios_asignados = paciente.get('estudios', [])
+
+    # Pruebas disponibles (que no tenga el paciente)
+    pruebas_disponibles = [p for p in pruebas if p['clave'] not in claves_asignadas]
+
+    return render_template(
+        'editar_paciente.html',
+        paciente=paciente,
+        pruebas=pruebas_disponibles,
+        contenedores=contenedores,
+        precios=precios_dict,
+        estudios_asignados=estudios_asignados
     )
 
 @app.route('/resultados/<folio>', methods=['GET', 'POST'])
