@@ -15,8 +15,11 @@
       }
     },
     "ganancia_porcentaje": 50,
-    "precio_sugerido": 120,
-    "precio_publico": 120
+    "precio_sugerido_matriz": 60,
+    "precio_sugerido_sigma": 112.5,
+    "precio_publico_matriz": 120,
+    "precio_publico_sigma": 130,
+    "validado": false
   },
   {
     "tipo": "prueba",
@@ -34,26 +37,10 @@
       }
     },
     "ganancia_porcentaje": 50,
-    "precio_sugerido": 180,
-    "precio_publico": 180
-  },
-  {
-    "tipo": "prueba",
-    "id_elemento": "TGO",
-    "costos": {
-      "matriz": {
-        "maquila": 0,
-        "materiales": 30,
-        "envio": 0
-      },
-      "sigma": {
-        "maquila": 50,
-        "materiales": 0,
-        "envio": 15
-      }
-    },
-    "ganancia_porcentaje": 50,
-    "precio_sugerido": 135,
-    "precio_publico": 135
+    "precio_sugerido_matriz": 75,
+    "precio_sugerido_sigma": 127.5,
+    "precio_publico_matriz": 180,
+    "precio_publico_sigma": 190,
+    "validado": false
   }
 ]

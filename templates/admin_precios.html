@@ -7,10 +7,14 @@
         table { width: 100%; border-collapse: collapse; margin: 20px 0; }
         th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
         input, select { width: 100%; padding: 8px; margin: 5px 0; }
-        button { background: #28a745; color: white; padding: 10px 20px; border: none; margin: 10px 0; }
+        button { padding: 8px 12px; margin: 2px; cursor: pointer; }
+        .btn-guardar { background: #28a745; color: white; border: none; }
+        .btn-editar { background: #007bff; color: white; border: none; }
+        .btn-validar { background: #ffc107; color: black; border: none; }
+        .fila-validada { background-color: #d4edda; } /* Verde claro */
+        .fila-normal { background-color: white; }
+        .sugerido { font-weight: bold; color: #0066cc; }
         .btn { background: #007bff; color: white; padding: 8px 16px; text-decoration: none; margin: 5px; }
-        .info { font-size: 0.9em; color: #666; }
-        .laboratorio { font-weight: bold; color: #0066cc; }
     </style>
 </head>
 <body>
@@ -18,15 +22,18 @@
     <a href="/" class="btn">← Inicio</a>
     <a href="/admin/pruebas" class="btn">Administrar Pruebas</a>
 
-    <form method="POST">
-        <table>
+    <form method="POST" id="formPrecios">
+        <table id="tablaPrecios">
             <tr>
                 <th>Prueba</th>
                 <th colspan="3">Costos - Matriz</th>
                 <th colspan="3">Costos - SIGMA</th>
                 <th>Ganancia (%)</th>
-                <th>Precio Sugerido</th>
-                <th>Precio al Público</th>
+                <th>P. Sugerido (Matriz)</th>
+                <th>P. Sugerido (SIGMA)</th>
+                <th>P. Público (Matriz)</th>
+                <th>P. Público (SIGMA)</th>
+                <th>Acciones</th>
             </tr>
             <tr>
                 <th></th>
@@ -36,6 +43,9 @@
                 <th>Maquila</th>
                 <th>Materiales</th>
                 <th>Envío</th>
+                <th></th>
+                <th></th>
+                <th></th>
                 <th></th>
                 <th></th>
                 <th></th>
@@ -45,41 +55,106 @@
             {% set costos = precio.costos or {} %}
             {% set matriz = costos.matriz or {} %}
             {% set sigma = costos.sigma or {} %}
-            <tr>
+            {% set validado = precio.validado or false %}
+            {% set clase_fila = "fila-validada" if validado else "fila-normal" %}
+
+            <tr class="{{ clase_fila }}" id="fila_{{ loop.index }}">
                 <td>
                     {{ p.nombre }}
                     <input type="hidden" name="tipo_{{ loop.index }}" value="prueba">
                     <input type="hidden" name="id_{{ loop.index }}" value="{{ p.clave }}">
+                    <input type="hidden" name="validado_{{ loop.index }}" id="validado_{{ loop.index }}" value="{{ '1' if validado else '0' }}">
                 </td>
                 <!-- Costos Matriz -->
-                <td><input type="number" step="0.01" name="maquila_matriz_{{ loop.index }}" value="{{ matriz.maquila if matriz.maquila else 0 }}"></td>
-                <td><input type="number" step="0.01" name="materiales_matriz_{{ loop.index }}" value="{{ matriz.materiales if matriz.materiales else 0 }}"></td>
-                <td><input type="number" step="0.01" name="envio_matriz_{{ loop.index }}" value="{{ matriz.envio if matriz.envio else 0 }}"></td>
+                <td><input type="number" step="0.01" name="maquila_matriz_{{ loop.index }}" value="{{ matriz.maquila if matriz.maquila else 0 }}" class="costo" data-idx="{{ loop.index }}" {{ 'readonly' if validado else '' }}></td>
+                <td><input type="number" step="0.01" name="materiales_matriz_{{ loop.index }}" value="{{ matriz.materiales if matriz.materiales else 0 }}" class="costo" data-idx="{{ loop.index }}" {{ 'readonly' if validado else '' }}></td>
+                <td><input type="number" step="0.01" name="envio_matriz_{{ loop.index }}" value="{{ matriz.envio if matriz.envio else 0 }}" class="costo" data-idx="{{ loop.index }}" {{ 'readonly' if validado else '' }}></td>
                 <!-- Costos SIGMA -->
-                <td><input type="number" step="0.01" name="maquila_sigma_{{ loop.index }}" value="{{ sigma.maquila if sigma.maquila else 0 }}"></td>
-                <td><input type="number" step="0.01" name="materiales_sigma_{{ loop.index }}" value="{{ sigma.materiales if sigma.materiales else 0 }}"></td>
-                <td><input type="number" step="0.01" name="envio_sigma_{{ loop.index }}" value="{{ sigma.envio if sigma.envio else 0 }}"></td>
+                <td><input type="number" step="0.01" name="maquila_sigma_{{ loop.index }}" value="{{ sigma.maquila if sigma.maquila else 0 }}" class="costo" data-idx="{{ loop.index }}" {{ 'readonly' if validado else '' }}></td>
+                <td><input type="number" step="0.01" name="materiales_sigma_{{ loop.index }}" value="{{ sigma.materiales if sigma.materiales else 0 }}" class="costo" data-idx="{{ loop.index }}" {{ 'readonly' if validado else '' }}></td>
+                <td><input type="number" step="0.01" name="envio_sigma_{{ loop.index }}" value="{{ sigma.envio if sigma.envio else 0 }}" class="costo" data-idx="{{ loop.index }}" {{ 'readonly' if validado else '' }}></td>
                 <!-- Ganancia -->
-                <td><input type="number" step="0.1" name="ganancia_{{ loop.index }}" value="{{ precio.ganancia_porcentaje if precio.ganancia_porcentaje else 50 }}" required></td>
-                <!-- Precio Sugerido -->
+                <td><input type="number" step="0.1" name="ganancia_{{ loop.index }}" value="{{ precio.ganancia_porcentaje if precio.ganancia_porcentaje else 50 }}" class="ganancia" data-idx="{{ loop.index }}" required {{ 'readonly' if validado else '' }}></td>
+                <!-- Precio Sugerido (Matriz) -->
+                <td class="sugerido" id="sugerido_matriz_{{ loop.index }}">{{ "%.2f"|format(precio.precio_sugerido_matriz if precio.precio_sugerido_matriz else 0) }}</td>
+                <!-- Precio Sugerido (SIGMA) -->
+                <td class="sugerido" id="sugerido_sigma_{{ loop.index }}">{{ "%.2f"|format(precio.precio_sugerido_sigma if precio.precio_sugerido_sigma else 0) }}</td>
+                <!-- Precio Público (Matriz) -->
+                <td><input type="number" step="0.01" name="precio_publico_matriz_{{ loop.index }}" value="{{ precio.precio_publico_matriz if precio.precio_publico_matriz else 0 }}" required {{ 'readonly' if validado else '' }}></td>
+                <!-- Precio Público (SIGMA) -->
+                <td><input type="number" step="0.01" name="precio_publico_sigma_{{ loop.index }}" value="{{ precio.precio_publico_sigma if precio.precio_publico_sigma else 0 }}" required {{ 'readonly' if validado else '' }}></td>
+                <!-- Acciones -->
                 <td>
-                    {% set costo_matriz = (matriz.maquila if matriz.maquila else 0) + (matriz.materiales if matriz.materiales else 0) + (matriz.envio if matriz.envio else 0) %}
-                    {% set costo_sigma = (sigma.maquila if sigma.maquila else 0) + (sigma.materiales if sigma.materiales else 0) + (sigma.envio if sigma.envio else 0) %}
-                    {% set max_costo = costo_matriz if costo_matriz > costo_sigma else costo_sigma %}
-                    {% set sugerido = (max_costo * (1 + (precio.ganancia_porcentaje if precio.ganancia_porcentaje else 50) / 100)) | round(2) %}
-                    <span>{{ sugerido }}</span>
+                    {% if validado %}
+                        <button type="button" class="btn-editar" onclick="editarFila({{ loop.index }})">Editar</button>
+                    {% else %}
+                        <button type="button" class="btn-validar" onclick="validarFila({{ loop.index }})">Validar</button>
+                    {% endif %}
                 </td>
-                <!-- Precio Público -->
-                <td><input type="number" step="0.01" name="precio_publico_{{ loop.index }}" value="{{ precio.precio_publico if precio.precio_publico else sugerido }}" required></td>
             </tr>
             {% endfor %}
         </table>
-        <button type="submit">Guardar Precios</button>
+        <button type="submit" class="btn-guardar">Guardar Todos los Precios</button>
     </form>
 
-    <p class="info">
-        <strong>Precio sugerido:</strong> Se calcula con el costo más alto (matriz o SIGMA) aplicando la ganancia.<br>
-        <strong>Tú decides el precio final</strong> en "Precio al Público".
-    </p>
+    <p><strong>Estado:</strong> Fila verde = validada. Fila blanca = pendiente.</p>
+
+    <script>
+        function calcularSugeridos(idx) {
+            const maquilaMatriz = parseFloat(document.querySelector(`[name="maquila_matriz_${idx}"]`).value) || 0;
+            const materialesMatriz = parseFloat(document.querySelector(`[name="materiales_matriz_${idx}"]`).value) || 0;
+            const envioMatriz = parseFloat(document.querySelector(`[name="envio_matriz_${idx}"]`).value) || 0;
+            const maquilaSigma = parseFloat(document.querySelector(`[name="maquila_sigma_${idx}"]`).value) || 0;
+            const materialesSigma = parseFloat(document.querySelector(`[name="materiales_sigma_${idx}"]`).value) || 0;
+            const envioSigma = parseFloat(document.querySelector(`[name="envio_sigma_${idx}"]`).value) || 0;
+            const ganancia = parseFloat(document.querySelector(`[name="ganancia_${idx}"]`).value) || 0;
+
+            const costoMatriz = maquilaMatriz + materialesMatriz + envioMatriz;
+            const costoSigma = maquilaSigma + materialesSigma + envioSigma;
+
+            const sugeridoMatriz = costoMatriz * (1 + ganancia / 100);
+            const sugeridoSigma = costoSigma * (1 + ganancia / 100);
+
+            document.getElementById(`sugerido_matriz_${idx}`).textContent = sugeridoMatriz.toFixed(2);
+            document.getElementById(`sugerido_sigma_${idx}`).textContent = sugeridoSigma.toFixed(2);
+        }
+
+        function validarFila(idx) {
+            const inputs = document.querySelectorAll(`#fila_${idx} input`);
+            inputs.forEach(input => {
+                if (input.name.startsWith('precio_publico_')) return;
+                input.setAttribute('readonly', 'readonly');
+            });
+            document.getElementById(`fila_${idx}`).classList.add('fila-validada');
+            document.getElementById(`validado_${idx}`).value = '1';
+            document.querySelector(`#fila_${idx} td:last-child`).innerHTML = 
+                `<button type="button" class="btn-editar" onclick="editarFila(${idx})">Editar</button>`;
+        }
+
+        function editarFila(idx) {
+            const inputs = document.querySelectorAll(`#fila_${idx} input`);
+            inputs.forEach(input => {
+                if (input.name.startsWith('precio_publico_')) return;
+                input.removeAttribute('readonly');
+            });
+            document.getElementById(`fila_${idx}`).classList.remove('fila-validada');
+            document.getElementById(`validado_${idx}`).value = '0';
+            document.querySelector(`#fila_${idx} td:last-child`).innerHTML = 
+                `<button type="button" class="btn-validar" onclick="validarFila(${idx})">Validar</button>`;
+        }
+
+        document.querySelectorAll('.costo, .ganancia').forEach(input => {
+            input.addEventListener('input', function() {
+                const idx = this.getAttribute('data-idx');
+                calcularSugeridos(idx);
+            });
+        });
+
+        // Calcular todos al cargar
+        document.querySelectorAll('.costo').forEach(input => {
+            const idx = input.getAttribute('data-idx');
+            calcularSugeridos(idx);
+        });
+    </script>
 </body>
 </html>

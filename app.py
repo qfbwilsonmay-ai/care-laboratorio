@@ -23,8 +23,8 @@ def cargar_catalogos():
     # Crear diccionario de precios públicos
     precios_dict = {}
     for p in precios:
-        precios_dict[f"{p['tipo']}_{p['id_elemento']}"] = p['precio_publico']
-    
+        key = f"{p['tipo']}_{p['id_elemento']}"
+        precios_dict[key] = p
     return pruebas, contenedores, precios, precios_dict
 
 @app.route('/')
@@ -44,10 +44,10 @@ def registro():
         # Obtener estudios seleccionados
         pruebas_seleccionadas = request.form.getlist('pruebas')
 
-        # Obtener laboratorio de procesamiento para cada prueba
+        # Laboratorio para cada prueba
         laboratorios = {}
         for clave in pruebas_seleccionadas:
-            lab = request.form.get(f'laboratorio_{clave}', 'matriz')  # por defecto: matriz
+            lab = request.form.get(f'laboratorio_{clave}', 'matriz')
             laboratorios[clave] = lab
 
         folio = generar_folio()
@@ -61,12 +61,19 @@ def registro():
         for clave in pruebas_seleccionadas:
             prueba = next((p for p in pruebas if p['clave'] == clave), None)
             if prueba:
-                precio = precios_dict.get(f"prueba_{clave}", 0)
-                # Guardar con laboratorio asignado
+                # Obtener precio según laboratorio
+                precio_data = precios_dict.get(f"prueba_{clave}")
+                if not precio_data:
+                    precio_final = 0
+                else:
+                    precio_final = precio_data.get('precio_publico_matriz', 0)
+                    if laboratorios[clave] == 'sigma':
+                        precio_final = precio_data.get('precio_publico_sigma', 0)
+
                 estudios.append({
                     "clave": clave,
                     "nombre": prueba['nombre'],
-                    "precio": precio,
+                    "precio": precio_final,
                     "procesado_en": laboratorios[clave]
                 })
 
@@ -94,7 +101,7 @@ def registro():
         'registro.html',
         pruebas=pruebas,
         contenedores=contenedores,
-        precios=precios_dict
+        precios_dict=precios_dict
     )
 
 @app.route('/editar_paciente/<folio>', methods=['GET', 'POST'])
@@ -132,11 +139,15 @@ def editar_paciente(folio):
             if clave not in claves_existentes:
                 prueba = next((p for p in pruebas if p['clave'] == clave), None)
                 if prueba:
-                    precio = precios_dict.get(f"prueba_{clave}", 0)
+                    precio_data = precios_dict.get(f"prueba_{clave}")
+                    precio_final = precio_data.get('precio_publico_matriz', 0) if precio_data else 0
+                    if laboratorios[clave] == 'sigma':
+                        precio_final = precio_data.get('precio_publico_sigma', 0) if precio_data else 0
+
                     nuevos_estudios.append({
                         "clave": clave,
                         "nombre": prueba['nombre'],
-                        "precio": precio,
+                        "precio": precio_final,
                         "procesado_en": laboratorios[clave]
                     })
 
@@ -172,7 +183,7 @@ def editar_paciente(folio):
         paciente=paciente,
         pruebas=pruebas_disponibles,
         contenedores=contenedores,
-        precios=precios_dict,
+        precios_dict=precios_dict,
         estudios_asignados=estudios_asignados
     )
 
@@ -279,13 +290,16 @@ def admin_precios():
                     materiales_sigma = float(request.form.get(f'materiales_sigma_{idx}', 0))
                     envio_sigma = float(request.form.get(f'envio_sigma_{idx}', 0))
                     ganancia = float(request.form[f'ganancia_{idx}'])
+                    precio_publico_matriz = float(request.form[f'precio_publico_matriz_{idx}'])
+                    precio_publico_sigma = float(request.form[f'precio_publico_sigma_{idx}'])
+                    validado = request.form.get(f'validado_{idx}') == '1'
                 except:
                     continue
 
                 costo_matriz = maquila_matriz + materiales_matriz + envio_matriz
                 costo_sigma = maquila_sigma + materiales_sigma + envio_sigma
-                precio_sugerido = max(costo_matriz, costo_sigma) * (1 + ganancia / 100)
-                precio_publico = float(request.form.get(f'precio_publico_{idx}', precio_sugerido))
+                precio_sugerido_matriz = round(costo_matriz * (1 + ganancia / 100), 2)
+                precio_sugerido_sigma = round(costo_sigma * (1 + ganancia / 100), 2)
 
                 nuevos_precios.append({
                     "tipo": tipo,
@@ -303,15 +317,20 @@ def admin_precios():
                         }
                     },
                     "ganancia_porcentaje": ganancia,
-                    "precio_sugerido": round(precio_sugerido, 2),
-                    "precio_publico": round(precio_publico, 2)
+                    "precio_sugerido_matriz": precio_sugerido_matriz,
+                    "precio_sugerido_sigma": precio_sugerido_sigma,
+                    "precio_publico_matriz": precio_publico_matriz,
+                    "precio_publico_sigma": precio_publico_sigma,
+                    "validado": validado
                 })
 
+        # Guardar en precios.json
         with open('datos/precios.json', 'w', encoding='utf-8') as f:
             json.dump(nuevos_precios, f, indent=4, ensure_ascii=False)
 
         return redirect(url_for('admin_precios'))
 
+    # Si es GET, cargar datos
     pruebas = cargar_datos('datos/pruebas.json')
     precios = cargar_datos('datos/precios.json')
     precios_dict = {f"{p['tipo']}_{p['id_elemento']}": p for p in precios}
