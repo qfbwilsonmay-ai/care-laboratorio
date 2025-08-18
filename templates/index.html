@@ -9,6 +9,7 @@
         th { background-color: #f2f2f2; }
         a { margin: 5px; text-decoration: none; color: #0066cc; }
         .btn { display: inline-block; padding: 8px 16px; background: #0066cc; color: white; border: none; border-radius: 4px; }
+        .btn-danger { background: #d9534f; }
     </style>
 </head>
 <body>
@@ -31,7 +32,10 @@
             <td>{{ p.edad }}</td>
             <td>{{ p.sexo }}</td>
             <td>{{ p.medico }}</td>
-            <td><a href="/resultados/{{ p.folio }}">Resultados</a></td>
+            <td>
+                <a href="/resultados/{{ p.folio }}" class="btn">Resultados</a>
+                <a href="/eliminar_paciente/{{ p.folio }}" class="btn btn-danger" onclick="return confirm('¿Estás seguro de eliminar este paciente?')">Eliminar</a>
+            </td>
         </tr>
         {% endfor %}
     </table>

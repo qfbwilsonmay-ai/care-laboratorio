@@ -39,8 +39,23 @@ def registro():
         diagnostico = request.form['diagnostico']
         medico = request.form['medico']
 
+        # Obtener estudios seleccionados
+        pruebas_seleccionadas = request.form.getlist('pruebas')
+
         folio = generar_folio()
         edad = calcular_edad(fecha_nac)
+
+        # Lista para guardar los estudios con su info
+        estudios = []
+        for clave in pruebas_seleccionadas:
+            prueba = next((p for p in PRUEBAS if p['clave'] == clave), None)
+            if prueba:
+                precio = precios_dict.get(f"prueba_{clave}", 0)
+                estudios.append({
+                    "clave": clave,
+                    "nombre": prueba['nombre'],
+                    "precio": precio
+                })
 
         paciente = {
             "folio": folio,
@@ -50,6 +65,7 @@ def registro():
             "sexo": sexo,
             "diagnostico": diagnostico,
             "medico": medico,
+            "estudios": estudios,
             "fecha_registro": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
 
@@ -74,6 +90,10 @@ def resultados(folio):
 
     if not paciente:
         return "Paciente no encontrado", 404
+
+    # Obtener solo las pruebas que se le asignaron
+    claves_solicitadas = [e['clave'] for e in paciente.get('estudios', [])]
+    pruebas_solicitadas = [p for p in PRUEBAS if p['clave'] in claves_solicitadas]
 
     if request.method == 'POST':
         clave = request.form['prueba']
@@ -104,9 +124,48 @@ def resultados(folio):
     return render_template(
         'resultados.html',
         paciente=paciente,
-        pruebas=PRUEBAS,
+        pruebas=pruebas_solicitadas,
         resultados=resultados
     )
+
+@app.route('/editar_resultado/<folio>/<clave>', methods=['GET', 'POST'])
+def editar_resultado(folio, clave):
+    resultados = cargar_datos(RUTA_RESULTADOS)
+    resultado = next((r for r in resultados if r['folio'] == folio and r['clave'] == clave), None)
+
+    if not resultado:
+        return "Resultado no encontrado", 404
+
+    if request.method == 'POST':
+        nuevo_resultado = request.form['resultado']
+        resultado['resultado'] = nuevo_resultado
+        resultado['fecha'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        guardar_datos(RUTA_RESULTADOS, resultados)
+        return redirect(url_for('resultados', folio=folio))
+
+    return f'''
+    <h3>Editar resultado: {resultado['nombre']}</h3>
+    <form method="POST">
+        <input type="text" name="resultado" value="{resultado['resultado']}" required>
+        <button type="submit">Guardar</button>
+        <a href="/resultados/{folio}">Cancelar</a>
+    </form>
+    '''
+
+@app.route('/eliminar_paciente/<folio>')
+def eliminar_paciente(folio):
+    pacientes = cargar_datos(RUTA_PACIENTES)
+    resultados = cargar_datos(RUTA_RESULTADOS)
+
+    # Filtrar paciente
+    pacientes = [p for p in pacientes if p['folio'] != folio]
+    guardar_datos(RUTA_PACIENTES, pacientes)
+
+    # También eliminar sus resultados
+    resultados = [r for r in resultados if r['folio'] != folio]
+    guardar_datos(RUTA_RESULTADOS, resultados)
+
+    return redirect(url_for('index'))
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 10000))
