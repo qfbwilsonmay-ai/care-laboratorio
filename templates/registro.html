@@ -37,26 +37,27 @@
         <input type="text" name="medico" required>
 
         <!-- Sección de estudios -->
-        <h3>Estudios a realizar</h3>
-        <div class="checkbox-list">
-            {% for p in pruebas %}
-            <div>
-                <input 
-                    type="checkbox" 
-                    name="pruebas" 
-                    value="{{ p.clave }}" 
-                    id="prueba_{{ p.clave }}"
-                >
-                <label for="prueba_{{ p.clave }}">
-                    {{ p.nombre }} 
-                    - ${{ precios.get('prueba_' + p.clave, 0) }}
-                    ({{ 
-                        contenedores | selectattr('id', 'equalto', p.id_contenedor) | map(attribute='nombre') | first 
-                    }})
-                </label>
-            </div>
-            {% endfor %}
-        </div>
+       <h3>Estudios a realizar</h3>
+<div class="checkbox-list">
+    {% for p in pruebas %}
+    <div style="display: flex; align-items: center; margin: 8px 0;">
+        <input 
+            type="checkbox" 
+            name="pruebas" 
+            value="{{ p.clave }}" 
+            id="prueba_{{ p.clave }}"
+            style="margin-right: 10px;"
+        >
+        <label for="prueba_{{ p.clave }}" style="flex: 1;">
+            {{ p.nombre }} 
+            <span style="color: #666; font-size: 0.9em;"> - ${{ precios.get('prueba_' + p.clave, 0) }}</span>
+            <span style="color: #0066cc; font-size: 0.9em;"> ({{ 
+                contenedores | selectattr('id', 'equalto', p.id_contenedor) | map(attribute='nombre') | first 
+            }})</span>
+        </label>
+    </div>
+    {% endfor %}
+</div>
 
         <button type="submit">Registrar Paciente</button>
     </form>
