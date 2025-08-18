@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Administrar Precios - CARE</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
+        input, select { width: 100%; padding: 8px; margin: 5px 0; }
+        button { background: #28a745; color: white; padding: 10px 20px; border: none; margin: 10px 0; }
+        .btn { background: #007bff; color: white; padding: 8px 16px; text-decoration: none; margin: 5px; }
+        .info { font-size: 0.9em; color: #666; }
+    </style>
+</head>
+<body>
+    <h1>Administrar Precios</h1>
+    <a href="/" class="btn">← Inicio</a>
+    <a href="/admin/pruebas" class="btn">Administrar Pruebas</a>
+
+    <form method="POST">
+        <table>
+            <tr>
+                <th>Prueba</th>
+                <th>Maquila</th>
+                <th>Materiales</th>
+                <th>Envío</th>
+                <th>Ganancia (%)</th>
+                <th>Precio Sugerido</th>
+                <th>Precio al Público</th>
+            </tr>
+            {% for p in pruebas %}
+            {% set precio = precios_dict.get('prueba_' + p.clave) or {} %}
+            <tr>
+                <td>
+                    {{ p.nombre }}
+                    <input type="hidden" name="tipo_{{ loop.index }}" value="prueba">
+                    <input type="hidden" name="id_{{ loop.index }}" value="{{ p.clave }}">
+                </td>
+                <td><input type="number" name="maquila_{{ loop.index }}" value="{{ precio.costos.maquila if precio.costos else 0 }}" step="0.01" required></td>
+                <td><input type="number" name="materiales_{{ loop.index }}" value="{{ precio.costos.materiales if precio.costos else 0 }}" step="0.01" required></td>
+                <td><input type="number" name="envio_{{ loop.index }}" value="{{ precio.costos.envio if precio.costos else 0 }}" step="0.01" required></td>
+                <td><input type="number" name="ganancia_{{ loop.index }}" value="{{ precio.ganancia_porcentaje if precio.ganancia_porcentaje else 50 }}" step="0.1" required></td>
+                <td>
+                    {% set costo = (precio.costos.maquila if precio.costos else 0) + (precio.costos.materiales if precio.costos else 0) + (precio.costos.envio if precio.costos else 0) %}
+                    {% set sugerido = (costo * (1 + (precio.ganancia_porcentaje if precio.ganancia_porcentaje else 50) / 100)) | round(2) %}
+                    <span id="sugerido_{{ loop.index }}">{{ sugerido }}</span>
+                </td>
+                <td><input type="number" name="precio_publico_{{ loop.index }}" value="{{ precio.precio_publico if precio.precio_publico else sugerido }}" step="0.01" required></td>
+            </tr>
+            {% endfor %}
+        </table>
+        <button type="submit">Guardar Precios</button>
+    </form>
+
+    <p class="info">
+        <strong>Precio sugerido:</strong> (Maquila + Materiales + Envío) × (1 + Ganancia/100)<br>
+        <strong>Tú decides el precio final</strong> en "Precio al Público".
+    </p>
+</body>
+</html>
