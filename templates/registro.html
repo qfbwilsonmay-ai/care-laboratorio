@@ -10,6 +10,8 @@
         button { background: #0066cc; color: white; padding: 10px 20px; border: none; }
         table { width: 100%; border-collapse: collapse; margin: 20px 0; }
         th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
+        .checkbox-list { margin: 10px 0; }
+        .checkbox-list div { margin: 5px 0; }
     </style>
 </head>
 <body>
@@ -34,29 +36,31 @@
         <label>Médico solicitante:</label>
         <input type="text" name="medico" required>
 
-        <button type="submit">Registrar</button>
+        <!-- Sección de estudios -->
+        <h3>Estudios a realizar</h3>
+        <div class="checkbox-list">
+            {% for p in pruebas %}
+            <div>
+                <input 
+                    type="checkbox" 
+                    name="pruebas" 
+                    value="{{ p.clave }}" 
+                    id="prueba_{{ p.clave }}"
+                >
+                <label for="prueba_{{ p.clave }}">
+                    {{ p.nombre }} 
+                    - ${{ precios.get('prueba_' + p.clave, 0) }}
+                    ({{ 
+                        contenedores | selectattr('id', 'equalto', p.id_contenedor) | map(attribute='nombre') | first 
+                    }})
+                </label>
+            </div>
+            {% endfor %}
+        </div>
+
+        <button type="submit">Registrar Paciente</button>
     </form>
 
-    <h2>Pruebas Disponibles</h2>
-    <table>
-        <tr>
-            <th>Prueba</th>
-            <th>Contenedor</th>
-            <th>Precio</th>
-        </tr>
-        {% for p in pruebas %}
-        <tr>
-            <td>{{ p.nombre }}</td>
-            <td>
-                {% for c in contenedores if c.id == p.id_contenedor %}
-                    {{ c.nombre }}
-                {% endfor %}
-            </td>
-            <td>$ {{ precios.get('prueba_' + p.clave, 0) }}</td>
-        </tr>
-        {% endfor %}
-    </table>
-
-    <a href="/">← Inicio</a>
+    <a href="/">← Volver al inicio</a>
 </body>
 </html>
