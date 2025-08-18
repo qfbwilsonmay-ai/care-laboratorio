@@ -89,4 +89,5 @@ def resultados(folio):
     return render_template('resultados.html', paciente=paciente, pruebas=pruebas, resultados=resultados)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 10000))  # Usa el puerto de Render
+    app.run(host="0.0.0.0", port=port, debug=False)  # ¡Importante: 0.0.0.0 y debug=False!
