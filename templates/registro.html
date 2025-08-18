@@ -8,6 +8,8 @@
         label { display: block; margin: 10px 0 5px; }
         input, select { width: 100%; padding: 8px; margin-bottom: 10px; }
         button { background: #0066cc; color: white; padding: 10px 20px; border: none; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
     </style>
 </head>
 <body>
@@ -20,11 +22,11 @@
         <input type="date" name="fecha_nac" required>
 
         <label>Sexo:</label>
-<select name="sexo" required>
-    <option value="M">Hombre</option>
-    <option value="F">Mujer</option>
-    <option value="O">Otro</option>
-</select>
+        <select name="sexo" required>
+            <option value="M">Hombre</option>
+            <option value="F">Mujer</option>
+            <option value="O">Otro</option>
+        </select>
 
         <label>Diagnóstico (opcional):</label>
         <input type="text" name="diagnostico">
@@ -34,6 +36,27 @@
 
         <button type="submit">Registrar</button>
     </form>
-    <a href="/">← Volver</a>
+
+    <h2>Pruebas Disponibles</h2>
+    <table>
+        <tr>
+            <th>Prueba</th>
+            <th>Contenedor</th>
+            <th>Precio</th>
+        </tr>
+        {% for p in pruebas %}
+        <tr>
+            <td>{{ p.nombre }}</td>
+            <td>
+                {% for c in contenedores if c.id == p.id_contenedor %}
+                    {{ c.nombre }}
+                {% endfor %}
+            </td>
+            <td>$ {{ precios.get('prueba_' + p.clave, 0) }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <a href="/">← Inicio</a>
 </body>
 </html>

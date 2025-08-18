@@ -14,6 +14,17 @@ RUTA_RESULTADOS = 'datos/resultados.json'
 # Aseguramos que la carpeta 'datos' exista
 os.makedirs('datos', exist_ok=True)
 
+# Cargar catálogos
+PRUEBAS = cargar_datos('datos/pruebas.json')
+CONTENEDORES = cargar_datos('datos/contenedores.json')
+PRECIOS = cargar_datos('datos/precios.json')
+
+# Crear diccionario de precios: tipo_elemento_id -> precio
+precios_dict = {}
+for p in PRECIOS:
+    key = f"{p['tipo']}_{p['id_elemento']}"
+    precios_dict[key] = p['precio']
+
 @app.route('/')
 def index():
     pacientes = cargar_datos(RUTA_PACIENTES)
@@ -48,7 +59,13 @@ def registro():
 
         return redirect(url_for('index'))
 
-    return render_template('registro.html')
+    # Pasar datos a la plantilla
+    return render_template(
+        'registro.html',
+        pruebas=PRUEBAS,
+        contenedores=CONTENEDORES,
+        precios=precios_dict
+    )
 
 @app.route('/resultados/<folio>', methods=['GET', 'POST'])
 def resultados(folio):
@@ -58,16 +75,14 @@ def resultados(folio):
     if not paciente:
         return "Paciente no encontrado", 404
 
-    pruebas = [
-        {"clave": "GLU", "nombre": "Glucosa", "unidad": "mg/dL", "valores_normales": "70-110"},
-        {"clave": "CRE", "nombre": "Creatinina", "unidad": "mg/dL", "valores_normales": "0.7-1.3"},
-        {"clave": "URO", "nombre": "Uroanálisis", "unidad": "", "valores_normales": "Negativo"}
-    ]
-
     if request.method == 'POST':
         clave = request.form['prueba']
-        prueba = next((p for p in pruebas if p['clave'] == clave), None)
         resultado = request.form['resultado']
+
+        # Buscar la prueba
+        prueba = next((p for p in PRUEBAS if p['clave'] == clave), None)
+        if not prueba:
+            return "Prueba no encontrada", 400
 
         resultado_data = {
             "folio": folio,
@@ -86,8 +101,13 @@ def resultados(folio):
         return redirect(url_for('resultados', folio=folio))
 
     resultados = [r for r in cargar_datos(RUTA_RESULTADOS) if r['folio'] == folio]
-    return render_template('resultados.html', paciente=paciente, pruebas=pruebas, resultados=resultados)
+    return render_template(
+        'resultados.html',
+        paciente=paciente,
+        pruebas=PRUEBAS,
+        resultados=resultados
+    )
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 10000))  # Usa el puerto de Render
-    app.run(host="0.0.0.0", port=port, debug=False)  # ¡Importante: 0.0.0.0 y debug=False!
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port, debug=False)
