@@ -3,6 +3,7 @@
     "clave": "GLU",
     "nombre": "Glucosa",
     "tipo_muestra": "suero",
+    "id_contenedor": 1,
     "unidad": "mg/dL",
     "valores_normales": "70-110",
     "tipo": "cuantitativa"
@@ -11,14 +12,34 @@
     "clave": "CRE",
     "nombre": "Creatinina",
     "tipo_muestra": "suero",
+    "id_contenedor": 1,
     "unidad": "mg/dL",
     "valores_normales": "0.7-1.3",
     "tipo": "cuantitativa"
   },
   {
+    "clave": "HEM",
+    "nombre": "Hemograma Completo",
+    "tipo_muestra": "sangre total",
+    "id_contenedor": 2,
+    "unidad": "",
+    "valores_normales": "Ver resultados por parámetros",
+    "tipo": "cualitativa"
+  },
+  {
     "clave": "URO",
-    "nombre": "Uroanálisis",
+    "nombre": "Urocultivo",
     "tipo_muestra": "orina",
+    "id_contenedor": 5,
+    "unidad": "",
+    "valores_normales": "Negativo",
+    "tipo": "cualitativa"
+  },
+  {
+    "clave": "EXF",
+    "nombre": "Exudado Faringeo",
+    "tipo_muestra": "hisopo",
+    "id_contenedor": 6,
     "unidad": "",
     "valores_normales": "Negativo",
     "tipo": "cualitativa"
