@@ -44,6 +44,12 @@ def registro():
         # Obtener estudios seleccionados
         pruebas_seleccionadas = request.form.getlist('pruebas')
 
+        # Obtener laboratorio de procesamiento para cada prueba
+        laboratorios = {}
+        for clave in pruebas_seleccionadas:
+            lab = request.form.get(f'laboratorio_{clave}', 'matriz')  # por defecto: matriz
+            laboratorios[clave] = lab
+
         folio = generar_folio()
         edad = calcular_edad(fecha_nac)
 
@@ -56,10 +62,12 @@ def registro():
             prueba = next((p for p in pruebas if p['clave'] == clave), None)
             if prueba:
                 precio = precios_dict.get(f"prueba_{clave}", 0)
+                # Guardar con laboratorio asignado
                 estudios.append({
                     "clave": clave,
                     "nombre": prueba['nombre'],
-                    "precio": precio
+                    "precio": precio,
+                    "procesado_en": laboratorios[clave]
                 })
 
         paciente = {
@@ -108,6 +116,12 @@ def editar_paciente(folio):
         # Obtener nuevos estudios seleccionados
         nuevos_estudios_claves = request.form.getlist('nuevos_estudios')
 
+        # Laboratorio para nuevos estudios
+        laboratorios = {}
+        for clave in nuevos_estudios_claves:
+            lab = request.form.get(f'laboratorio_nuevo_{clave}', 'matriz')
+            laboratorios[clave] = lab
+
         # Cargar catálogos
         pruebas, contenedores, precios_lista, precios_dict = cargar_catalogos()
 
@@ -122,7 +136,8 @@ def editar_paciente(folio):
                     nuevos_estudios.append({
                         "clave": clave,
                         "nombre": prueba['nombre'],
-                        "precio": precio
+                        "precio": precio,
+                        "procesado_en": laboratorios[clave]
                     })
 
         # Añadir nuevos estudios
@@ -207,55 +222,44 @@ def resultados(folio):
         resultados=resultados
     )
 
-@app.route('/admin/precios', methods=['GET', 'POST'])
-def admin_precios():
+@app.route('/editar_resultado/<folio>/<clave>', methods=['GET', 'POST'])
+def editar_resultado(folio, clave):
+    resultados = cargar_datos(RUTA_RESULTADOS)
+    resultado = next((r for r in resultados if r['folio'] == folio and r['clave'] == clave), None)
+
+    if not resultado:
+        return "Resultado no encontrado", 404
+
     if request.method == 'POST':
-        nuevos_precios = []
-        for key in request.form:
-            if key.startswith('tipo_'):
-                idx = key.split('_')[1]
-                tipo = request.form[f'tipo_{idx}']
-                id_elemento = request.form[f'id_{idx}']
-                
-                try:
-                    maquila = float(request.form[f'maquila_{idx}'])
-                    materiales = float(request.form[f'materiales_{idx}'])
-                    envio = float(request.form[f'envio_{idx}'])
-                    ganancia = float(request.form[f'ganancia_{idx}'])
-                except:
-                    continue  # Si hay error, saltar
+        nuevo_resultado = request.form['resultado']
+        resultado['resultado'] = nuevo_resultado
+        resultado['fecha'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        guardar_datos(RUTA_RESULTADOS, resultados)
+        return redirect(url_for('resultados', folio=folio))
 
-                costo_total = maquila + materiales + envio
-                precio_sugerido = round(costo_total * (1 + ganancia / 100), 2)
-                precio_publico = float(request.form.get(f'precio_publico_{idx}', precio_sugerido))
+    return f'''
+    <h3>Editar resultado: {resultado["nombre"]}</h3>
+    <form method="POST">
+        <input type="text" name="resultado" value="{resultado["resultado"]}" required>
+        <button type="submit">Guardar</button>
+        <a href="/resultados/{folio}">Cancelar</a>
+    </form>
+    '''
 
-                nuevos_precios.append({
-                    "tipo": tipo,
-                    "id_elemento": id_elemento,
-                    "costos": {
-                        "maquila": maquila,
-                        "materiales": materiales,
-                        "envio": envio
-                    },
-                    "ganancia_porcentaje": ganancia,
-                    "precio_sugerido": precio_sugerido,
-                    "precio_publico": precio_publico
-                })
+@app.route('/eliminar_paciente/<folio>')
+def eliminar_paciente(folio):
+    pacientes = cargar_datos(RUTA_PACIENTES)
+    resultados = cargar_datos(RUTA_RESULTADOS)
 
-        # Guardar en precios.json
-        with open('datos/precios.json', 'w', encoding='utf-8') as f:
-            json.dump(nuevos_precios, f, indent=4, ensure_ascii=False)
+    # Filtrar paciente
+    pacientes = [p for p in pacientes if p['folio'] != folio]
+    guardar_datos(RUTA_PACIENTES, pacientes)
 
-        return redirect(url_for('admin_precios'))
+    # También eliminar sus resultados
+    resultados = [r for r in resultados if r['folio'] != folio]
+    guardar_datos(RUTA_RESULTADOS, resultados)
 
-    # Si es GET, cargar datos
-    pruebas = cargar_datos('datos/pruebas.json')
-    precios = cargar_datos('datos/precios.json')
-
-    # Convertir precios a dict para búsqueda fácil
-    precios_dict = {f"{p['tipo']}_{p['id_elemento']}": p for p in precios}
-
-    return render_template('admin_precios.html', pruebas=pruebas, precios_dict=precios_dict)
+    return redirect(url_for('index'))
 
 @app.route('/admin/pruebas', methods=['GET', 'POST'])
 def admin_pruebas():
@@ -296,20 +300,62 @@ def admin_pruebas():
     pruebas, contenedores, _ = cargar_catalogos()
     return render_template('admin_pruebas.html', pruebas=pruebas, contenedores=contenedores)
 
-@app.route('/eliminar_paciente/<folio>')
-def eliminar_paciente(folio):
-    pacientes = cargar_datos(RUTA_PACIENTES)
-    resultados = cargar_datos(RUTA_RESULTADOS)
+@app.route('/admin/precios', methods=['GET', 'POST'])
+def admin_precios():
+    if request.method == 'POST':
+        nuevos_precios = []
+        for key in request.form:
+            if key.startswith('tipo_'):
+                idx = key.split('_')[1]
+                tipo = request.form[f'tipo_{idx}']
+                id_elemento = request.form[f'id_{idx}']
+                
+                try:
+                    maquila_matriz = float(request.form.get(f'maquila_matriz_{idx}', 0))
+                    materiales_matriz = float(request.form.get(f'materiales_matriz_{idx}', 0))
+                    envio_matriz = float(request.form.get(f'envio_matriz_{idx}', 0))
+                    maquila_sigma = float(request.form.get(f'maquila_sigma_{idx}', 0))
+                    materiales_sigma = float(request.form.get(f'materiales_sigma_{idx}', 0))
+                    envio_sigma = float(request.form.get(f'envio_sigma_{idx}', 0))
+                    ganancia = float(request.form[f'ganancia_{idx}'])
+                except:
+                    continue
 
-    # Filtrar paciente
-    pacientes = [p for p in pacientes if p['folio'] != folio]
-    guardar_datos(RUTA_PACIENTES, pacientes)
+                costo_matriz = maquila_matriz + materiales_matriz + envio_matriz
+                costo_sigma = maquila_sigma + materiales_sigma + envio_sigma
+                precio_sugerido = max(costo_matriz, costo_sigma) * (1 + ganancia / 100)
+                precio_publico = float(request.form.get(f'precio_publico_{idx}', precio_sugerido))
 
-    # También eliminar sus resultados
-    resultados = [r for r in resultados if r['folio'] != folio]
-    guardar_datos(RUTA_RESULTADOS, resultados)
+                nuevos_precios.append({
+                    "tipo": tipo,
+                    "id_elemento": id_elemento,
+                    "costos": {
+                        "matriz": {
+                            "maquila": maquila_matriz,
+                            "materiales": materiales_matriz,
+                            "envio": envio_matriz
+                        },
+                        "sigma": {
+                            "maquila": maquila_sigma,
+                            "materiales": materiales_sigma,
+                            "envio": envio_sigma
+                        }
+                    },
+                    "ganancia_porcentaje": ganancia,
+                    "precio_sugerido": round(precio_sugerido, 2),
+                    "precio_publico": round(precio_publico, 2)
+                })
 
-    return redirect(url_for('index'))
+        with open('datos/precios.json', 'w', encoding='utf-8') as f:
+            json.dump(nuevos_precios, f, indent=4, ensure_ascii=False)
+
+        return redirect(url_for('admin_precios'))
+
+    pruebas = cargar_datos('datos/pruebas.json')
+    precios = cargar_datos('datos/precios.json')
+    precios_dict = {f"{p['tipo']}_{p['id_elemento']}": p for p in precios}
+
+    return render_template('admin_precios.html', pruebas=pruebas, precios_dict=precios_dict)
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 10000))

@@ -2,36 +2,58 @@
   {
     "tipo": "prueba",
     "id_elemento": "GLU",
-    "precio": 120.00
-  },
-  {
-    "tipo": "prueba",
-    "id_elemento": "CRE",
-    "precio": 150.00
+    "costos": {
+      "matriz": {
+        "maquila": 0,
+        "materiales": 40,
+        "envio": 0
+      },
+      "sigma": {
+        "maquila": 60,
+        "materiales": 0,
+        "envio": 15
+      }
+    },
+    "ganancia_porcentaje": 50,
+    "precio_sugerido": 120,
+    "precio_publico": 120
   },
   {
     "tipo": "prueba",
     "id_elemento": "HEM",
-    "precio": 180.00
+    "costos": {
+      "matriz": {
+        "maquila": 0,
+        "materiales": 50,
+        "envio": 0
+      },
+      "sigma": {
+        "maquila": 70,
+        "materiales": 0,
+        "envio": 15
+      }
+    },
+    "ganancia_porcentaje": 50,
+    "precio_sugerido": 180,
+    "precio_publico": 180
   },
   {
     "tipo": "prueba",
-    "id_elemento": "URO",
-    "precio": 200.00
-  },
-  {
-    "tipo": "prueba",
-    "id_elemento": "EXF",
-    "precio": 150.00
-  },
-  {
-    "tipo": "perfil",
-    "id_elemento": 1,
-    "precio": 250.00
-  },
-  {
-    "tipo": "paquete",
-    "id_elemento": 1,
-    "precio": 450.00
+    "id_elemento": "TGO",
+    "costos": {
+      "matriz": {
+        "maquila": 0,
+        "materiales": 30,
+        "envio": 0
+      },
+      "sigma": {
+        "maquila": 50,
+        "materiales": 0,
+        "envio": 15
+      }
+    },
+    "ganancia_porcentaje": 50,
+    "precio_sugerido": 135,
+    "precio_publico": 135
   }
 ]

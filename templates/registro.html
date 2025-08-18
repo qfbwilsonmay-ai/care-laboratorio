@@ -4,14 +4,19 @@
     <title>Registrar Paciente - CARE</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
-        form { max-width: 500px; }
+        form { max-width: 600px; }
         label { display: block; margin: 10px 0 5px; }
         input, select { width: 100%; padding: 8px; margin-bottom: 10px; }
         button { background: #0066cc; color: white; padding: 10px 20px; border: none; }
-        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
-        .checkbox-list { margin: 10px 0; }
-        .checkbox-list div { margin: 5px 0; }
+        .btn { background: #6c757d; color: white; padding: 8px 16px; text-decoration: none; margin: 5px 0; display: inline-block; }
+        .prueba-item {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+        .flecha { color: #c00; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -36,32 +41,28 @@
         <label>Médico solicitante:</label>
         <input type="text" name="medico" required>
 
-        <!-- Sección de estudios -->
-       <h3>Estudios a realizar</h3>
-<div class="checkbox-list">
-    {% for p in pruebas %}
-    <div style="display: flex; align-items: center; margin: 8px 0;">
-        <input 
-            type="checkbox" 
-            name="pruebas" 
-            value="{{ p.clave }}" 
-            id="prueba_{{ p.clave }}"
-            style="margin-right: 10px;"
-        >
-        <label for="prueba_{{ p.clave }}" style="flex: 1;">
-            {{ p.nombre }} 
-            <span style="color: #666; font-size: 0.9em;"> - ${{ precios.get('prueba_' + p.clave, 0) }}</span>
-            <span style="color: #0066cc; font-size: 0.9em;"> ({{ 
-                contenedores | selectattr('id', 'equalto', p.id_contenedor) | map(attribute='nombre') | first 
-            }})</span>
-        </label>
-    </div>
-    {% endfor %}
-</div>
+        <h3>Estudios a realizar</h3>
+        {% for p in pruebas %}
+        <div class="prueba-item">
+            <input type="checkbox" name="pruebas" value="{{ p.clave }}" id="prueba_{{ p.clave }}">
+            <label for="prueba_{{ p.clave }}"><strong>{{ p.nombre }}</strong></label>
+            
+            <div style="margin-left: 20px; font-size: 0.9em;">
+                <label>Procesar en:</label>
+                <select name="laboratorio_{{ p.clave }}" id="lab_{{ p.clave }}">
+                    <option value="matriz" {% if p.procesado_en == "matriz" %}selected{% endif %}>Matriz (CARE)</option>
+                    <option value="sigma" {% if p.procesado_en == "sigma" %}selected{% endif %}>SIGMA (maquila)</option>
+                </select>
+            </div>
+            
+            <div style="margin-left: 20px; color: #666;">
+                Precio: ${{ precios.get('prueba_' + p.clave, 0) }}
+            </div>
+        </div>
+        {% endfor %}
 
         <button type="submit">Registrar Paciente</button>
+        <a href="/" class="btn">← Inicio</a>
     </form>
-
-    <a href="/">← Volver al inicio</a>
 </body>
 </html>
