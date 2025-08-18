@@ -1,58 +1,122 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Resultados - {{ paciente.nombre }}</title>
+    <title>Resultados - CARE</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
-        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        th, td { padding: 10px; border: 1px solid #ccc; }
-        .btn { background: #0066cc; color: white; padding: 10px; text-decoration: none; margin: 5px; }
-        .btn-danger { background: #d9534f; }
+        .container { display: flex; gap: 20px; }
+        .main { flex: 1; }
+        .sidebar {
+            width: 250px;
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            position: sticky;
+            top: 20px;
+            align-self: flex-start;
+        }
+        .resultado-item {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .validado {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+        .referencia {
+            font-size: 0.9em; color: #666; margin: 5px 0; }
+        .btn { padding: 8px 12px; margin: 2px; cursor: pointer; }
+        .btn-guardar { background: #28a745; color: white; border: none; }
+        .btn-validar { background: #ffc107; color: black; border: none; }
+        .btn-editar { background: #007bff; color: white; border: none; }
+        .btn-anclado {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1em;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 100;
+        }
     </style>
 </head>
 <body>
-    <h1>Resultados - {{ paciente.nombre }}</h1>
-    <p><strong>Folio:</strong> {{ paciente.folio }} | <strong>Edad:</strong> {{ paciente.edad }} | <strong>Médico:</strong> {{ paciente.medico }}</p>
+    <h1>Resultados para {{ paciente.nombre }}</h1>
+    <p><strong>Folio:</strong> {{ paciente.folio }}</p>
+    <p><strong>Edad:</strong> {{ paciente.edad }} años</p>
 
-    <h2>Agregar Resultado</h2>
     <form method="POST">
-        <label>Prueba:</label>
-        <select name="prueba" required>
-            {% for p in pruebas %}
-            <option value="{{ p.clave }}">{{ p.nombre }}</option>
-            {% endfor %}
-        </select>
+        <div class="container">
+            <div class="main">
+                {% for prueba in pruebas %}
+                <div class="resultado-item" id="item_{{ prueba.clave }}">
+                    <strong>{{ prueba.nombre }}</strong>
+                    <input type="hidden" name="prueba" value="{{ prueba.clave }}">
+                    <input type="text" name="resultado" value="{% for r in resultados if r.clave == prueba.clave %}{{ r.resultado }}{% endfor %}" id="resultado_{{ prueba.clave }}" required>
+                    
+                    <div class="referencia">
+                        Unidad: {{ prueba.unidad }}<br>
+                        Valores normales: {{ prueba.valores_normales }}
+                    </div>
+                    
+                    {% set resultado = resultados | selectattr('clave', 'equalto', prueba.clave) | list | first %}
+                    {% if resultado %}
+                        <button type="button" class="btn-editar" onclick="editarResultado('{{ prueba.clave }}')">✏️ Editar</button>
+                        <button type="button" class="btn-validar" onclick="validarResultado('{{ prueba.clave }}')" style="display:none">✔️ Validar</button>
+                        <script>
+                            document.getElementById('item_{{ prueba.clave }}').classList.add('validado');
+                        </script>
+                    {% else %}
+                        <button type="button" class="btn-editar" onclick="editarResultado('{{ prueba.clave }}')" style="display:none">✏️ Editar</button>
+                        <button type="button" class="btn-validar" onclick="validarResultado('{{ prueba.clave }}')">✔️ Validar</button>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
 
-        <label>Resultado:</label>
-        <input type="text" name="resultado" required>
-
-        <button type="submit">Guardar Resultado</button>
+            <div class="sidebar">
+                <h4>Acciones rápidas</h4>
+                <button type="submit" class="btn-guardar">Guardar todos los resultados</button>
+                <p><small>Los campos validados están bloqueados.</small></p>
+            </div>
+        </div>
     </form>
 
-    <h2>Resultados Registrados</h2>
-    <table>
-        <tr>
-            <th>Prueba</th>
-            <th>Resultado</th>
-            <th>Unidad</th>
-            <th>Valores Normales</th>
-            <th>Fecha</th>
-            <th>Acciones</th>
-        </tr>
-        {% for r in resultados %}
-        <tr>
-            <td>{{ r.nombre }}</td>
-            <td>{{ r.resultado }}</td>
-            <td>{{ r.unidad }}</td>
-            <td>{{ r.valores_normales }}</td>
-            <td>{{ r.fecha }}</td>
-            <td>
-                <a href="/editar_resultado/{{ r.folio }}/{{ r.clave }}" class="btn">Editar</a>
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
+    <button type="submit" formaction="{{ url_for('resultados', folio=paciente.folio) }}" class="btn-anclado">Guardar Todo</button>
 
+    <a href="/resultados/{{ paciente.folio }}" class="btn">Actualizar</a>
     <a href="/" class="btn">← Inicio</a>
+
+    <script>
+        function validarResultado(clave) {
+            const input = document.getElementById(`resultado_${clave}`);
+            const item = document.getElementById(`item_${clave}`);
+            const btnValidar = input.nextElementSibling;
+            const btnEditar = btnValidar.nextElementSibling;
+            
+            input.setAttribute('readonly', 'readonly');
+            item.classList.add('validado');
+            btnValidar.style.display = 'none';
+            btnEditar.style.display = 'inline-block';
+        }
+
+        function editarResultado(clave) {
+            const input = document.getElementById(`resultado_${clave}`);
+            const item = document.getElementById(`item_${clave}`);
+            const btnValidar = input.nextElementSibling;
+            const btnEditar = btnValidar.nextElementSibling;
+            
+            input.removeAttribute('readonly');
+            item.classList.remove('validado');
+            btnEditar.style.display = 'none';
+            btnValidar.style.display = 'inline-block';
+        }
+    </script>
 </body>
 </html>

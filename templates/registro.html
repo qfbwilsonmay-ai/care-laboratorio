@@ -4,10 +4,20 @@
     <title>Registrar Paciente - CARE</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
-        form { max-width: 700px; }
+        .container { display: flex; gap: 20px; }
+        .left-column { flex: 1; max-height: 80vh; overflow-y: auto; }
+        .right-column {
+            width: 300px;
+            background: #e6f7ff;
+            border: 1px dashed #0066cc;
+            border-radius: 5px;
+            padding: 15px;
+            position: sticky;
+            top: 20px;
+            align-self: flex-start;
+        }
         label { display: block; margin: 10px 0 5px; }
         input, select { width: 100%; padding: 8px; margin-bottom: 10px; }
-        button { background: #0066cc; color: white; padding: 10px 20px; border: none; }
         .btn { background: #6c757d; color: white; padding: 8px 16px; text-decoration: none; margin: 5px 0; display: inline-block; }
         .prueba-item {
             border: 1px solid #ddd;
@@ -28,83 +38,99 @@
             border: 2px solid #0066cc;
             border-radius: 5px;
         }
-        .seleccionados {
-            margin: 20px 0;
-            padding: 15px;
-            border: 1px dashed #0066cc;
-            border-radius: 5px;
-            background: #e6f7ff;
+        .seleccionados h4 {
+            margin-top: 0;
+            color: #0066cc;
         }
         .seleccionados ul {
             list-style: none;
             padding: 0;
         }
         .seleccionados li {
-            margin: 5px 0;
+            margin: 8px 0;
             font-weight: bold;
         }
         .info {
             font-size: 0.9em;
             color: #666;
         }
+        .btn-anclado {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #0066cc;
+            color: white;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1em;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 100;
+        }
     </style>
 </head>
 <body>
     <h1>Registrar Paciente</h1>
     <form method="POST">
-        <label>Nombre completo:</label>
-        <input type="text" name="nombre" required>
+        <div class="container">
+            <div class="left-column">
+                <label>Nombre completo:</label>
+                <input type="text" name="nombre" required>
 
-        <label>Fecha de nacimiento (AAAA-MM-DD):</label>
-        <input type="date" name="fecha_nac" required>
+                <label>Fecha de nacimiento (AAAA-MM-DD):</label>
+                <input type="date" name="fecha_nac" required>
 
-        <label>Sexo:</label>
-        <select name="sexo" required>
-            <option value="M">Hombre</option>
-            <option value="F">Mujer</option>
-            <option value="O">Otro</option>
-        </select>
+                <label>Sexo:</label>
+                <select name="sexo" required>
+                    <option value="M">Hombre</option>
+                    <option value="F">Mujer</option>
+                    <option value="O">Otro</option>
+                </select>
 
-        <label>Diagnóstico (opcional):</label>
-        <input type="text" name="diagnostico">
+                <label>Diagnóstico (opcional):</label>
+                <input type="text" name="diagnostico">
 
-        <label>Médico solicitante:</label>
-        <input type="text" name="medico" required>
+                <label>Médico solicitante:</label>
+                <input type="text" name="medico" required>
 
-        <h3>Buscar estudios a realizar</h3>
-        <input type="text" id="buscador" class="buscador" placeholder="Escribe para buscar pruebas..." onkeyup="buscarPruebas()">
+                <h3>Buscar estudios a realizar</h3>
+                <input type="text" id="buscador" class="buscador" placeholder="Escribe para buscar pruebas..." onkeyup="buscarPruebas()">
 
-        <div id="lista-pruebas">
-            {% for p in pruebas %}
-            <div class="prueba-item" data-nombre="{{ p.nombre|lower }}" data-clave="{{ p.clave|lower }}">
-                <input type="checkbox" name="pruebas" value="{{ p.clave }}" id="prueba_{{ p.clave }}" onchange="actualizarSeleccionados()">
-                <label for="prueba_{{ p.clave }}"><strong>{{ p.nombre }}</strong></label>
-                
-                <div style="margin-left: 20px; font-size: 0.9em;">
-                    <label>Procesar en:</label>
-                    <select name="laboratorio_{{ p.clave }}" id="lab_{{ p.clave }}" onchange="actualizarSeleccionados()">
-                        <option value="matriz" {% if p.procesado_en == "matriz" %}selected{% endif %}>Matriz (CARE)</option>
-                        <option value="sigma" {% if p.procesado_en == "sigma" %}selected{% endif %}>SIGMA (maquila)</option>
-                    </select>
-                </div>
-                
-                <div style="margin-left: 20px; color: #666;" class="info">
-                    Precio: ${{ precios_dict.get('prueba_' + p.clave, {}).get('precio_publico_matriz', 0) }}
+                <div id="lista-pruebas">
+                    {% for p in pruebas %}
+                    <div class="prueba-item" data-nombre="{{ p.nombre|lower }}" data-clave="{{ p.clave|lower }}">
+                        <input type="checkbox" name="pruebas" value="{{ p.clave }}" id="prueba_{{ p.clave }}" onchange="actualizarSeleccionados()">
+                        <label for="prueba_{{ p.clave }}"><strong>{{ p.nombre }}</strong></label>
+                        
+                        <div style="margin-left: 20px; font-size: 0.9em;">
+                            <label>Procesar en:</label>
+                            <select name="laboratorio_{{ p.clave }}" id="lab_{{ p.clave }}" onchange="actualizarSeleccionados()">
+                                <option value="matriz" {% if p.procesado_en == "matriz" %}selected{% endif %}>Matriz (CARE)</option>
+                                <option value="sigma" {% if p.procesado_en == "sigma" %}selected{% endif %}>SIGMA (maquila)</option>
+                            </select>
+                        </div>
+                        
+                        <div style="margin-left: 20px; color: #666;" class="info">
+                            Precio: ${{ precios_dict.get('prueba_' + p.clave, {}).get('precio_publico_matriz', 0) }}
+                        </div>
+                    </div>
+                    {% endfor %}
                 </div>
             </div>
-            {% endfor %}
+
+            <div class="right-column">
+                <h4>Estudios seleccionados</h4>
+                <ul id="lista-seleccionados">
+                    <li>(Ninguno aún)</li>
+                </ul>
+            </div>
         </div>
 
-        <div class="seleccionados">
-            <h4>Estudios seleccionados:</h4>
-            <ul id="lista-seleccionados">
-                <li>(Ninguno aún)</li>
-            </ul>
-        </div>
-
-        <button type="submit">Registrar Paciente</button>
         <a href="/" class="btn">← Inicio</a>
     </form>
+
+    <!-- Botón anclado -->
+    <button type="submit" formaction="{{ url_for('registro') }}" class="btn-anclado">Registrar Paciente</button>
 
     <script>
         function buscarPruebas() {
@@ -144,7 +170,6 @@
             });
         }
 
-        // Inicializar al cargar
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
                 const allPruebas = document.querySelectorAll('.prueba-item');
