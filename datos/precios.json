@@ -1,0 +1,37 @@
+[
+  {
+    "tipo": "prueba",
+    "id_elemento": "GLU",
+    "precio": 120.00
+  },
+  {
+    "tipo": "prueba",
+    "id_elemento": "CRE",
+    "precio": 150.00
+  },
+  {
+    "tipo": "prueba",
+    "id_elemento": "HEM",
+    "precio": 180.00
+  },
+  {
+    "tipo": "prueba",
+    "id_elemento": "URO",
+    "precio": 200.00
+  },
+  {
+    "tipo": "prueba",
+    "id_elemento": "EXF",
+    "precio": 150.00
+  },
+  {
+    "tipo": "perfil",
+    "id_elemento": 1,
+    "precio": 250.00
+  },
+  {
+    "tipo": "paquete",
+    "id_elemento": 1,
+    "precio": 450.00
+  }
+]

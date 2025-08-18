@@ -1,0 +1,48 @@
+[
+  {
+    "id": 1,
+    "nombre": "Tapón rojo",
+    "tipo": "tubo",
+    "color_tapon": "rojo",
+    "uso": "Suero",
+    "descripcion": "Tubo sin anticoagulante. Para pruebas de suero: glucosa, creatinina, perfil hepático, etc."
+  },
+  {
+    "id": 2,
+    "nombre": "Tapón lila",
+    "tipo": "tubo",
+    "color_tapon": "lila",
+    "uso": "Sangre total",
+    "descripcion": "Tubo con EDTA. Para hemograma completo, frotis, genética."
+  },
+  {
+    "id": 3,
+    "nombre": "Tapón azul",
+    "tipo": "tubo",
+    "color_tapon": "azul",
+    "uso": "Plasma",
+    "descripcion": "Tubo con citrato. Para estudios de coagulación (INR, TP, TTPa)."
+  },
+  {
+    "id": 4,
+    "nombre": "Tapón gris",
+    "tipo": "tubo",
+    "color_tapon": "gris",
+    "uso": "Glucosa",
+    "descripcion": "Tubo con fluoruro. Para glucosa en ayunas o tolerancia."
+  },
+  {
+    "id": 5,
+    "nombre": "Frasco estéril",
+    "tipo": "frasco",
+    "uso": "Orina, secreciones",
+    "descripcion": "Frasco de plástico estéril. Para urocultivo, BK en orina, secreciones estériles."
+  },
+  {
+    "id": 6,
+    "nombre": "Medio Stuart",
+    "tipo": "hisopo",
+    "uso": "Exudado faríngeo, nasal, heridas",
+    "descripcion": "Hisopo en medio de transporte Stuart. Para cultivo de exudados faríngeos, gonococo, etc."
+  }
+]

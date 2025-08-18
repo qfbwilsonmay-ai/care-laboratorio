@@ -1,0 +1,14 @@
+[
+  {
+    "id": 1,
+    "nombre": "Perfil Metabólico Básico",
+    "descripcion": "Evaluación de glucosa, electrolitos y función renal",
+    "pruebas": ["GLU", "CRE"]
+  },
+  {
+    "id": 2,
+    "nombre": "Hemograma",
+    "descripcion": "Análisis completo de sangre",
+    "pruebas": ["HEM"]
+  }
+]

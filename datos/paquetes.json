@@ -1,0 +1,11 @@
+[
+  {
+    "id": 1,
+    "nombre": "Check-Up Básico",
+    "descripcion": "Estudio básico de salud preventiva",
+    "contenido": [
+      {"tipo": "perfil", "id": 1},
+      {"tipo": "prueba", "clave": "URO"}
+    ]
+  }
+]
