@@ -27,6 +27,7 @@ def cargar_catalogos():
         precios_dict[key] = p['precio']
     
     return pruebas, contenedores, precios_dict
+
 @app.route('/')
 def index():
     pacientes = cargar_datos(RUTA_PACIENTES)
@@ -47,10 +48,13 @@ def registro():
         folio = generar_folio()
         edad = calcular_edad(fecha_nac)
 
+        # Cargar pruebas para obtener info
+        pruebas, contenedores, precios_dict = cargar_catalogos()
+
         # Lista para guardar los estudios con su info
         estudios = []
         for clave in pruebas_seleccionadas:
-            prueba = next((p for p in PRUEBAS if p['clave'] == clave), None)
+            prueba = next((p for p in pruebas if p['clave'] == clave), None)
             if prueba:
                 precio = precios_dict.get(f"prueba_{clave}", 0)
                 estudios.append({
@@ -77,27 +81,20 @@ def registro():
 
         return redirect(url_for('index'))
 
-    # Pasar datos a la plantilla
+    # Cargar datos para la plantilla
     pruebas, contenedores, precios_dict = cargar_catalogos()
-return render_template(
-    'registro.html',
-    pruebas=pruebas,
-    contenedores=contenedores,
-    precios=precios_dict
-)
+    return render_template(
+        'registro.html',
+        pruebas=pruebas,
+        contenedores=contenedores,
+        precios=precios_dict
+    )
 
 @app.route('/resultados/<folio>', methods=['GET', 'POST'])
 def resultados(folio):
+    # Cargar datos
     pruebas, contenedores, precios_dict = cargar_catalogos()
-pacientes = cargar_datos(RUTA_PACIENTES)
-paciente = next((p for p in pacientes if p['folio'] == folio), None)
-
-if not paciente:
-    return "Paciente no encontrado", 404
-
-# Obtener solo las pruebas que se le asignaron
-claves_solicitadas = [e['clave'] for e in paciente.get('estudios', [])]
-pruebas_solicitadas = [p for p in pruebas if p['clave'] in claves_solicitadas]pacientes = cargar_datos(RUTA_PACIENTES)
+    pacientes = cargar_datos(RUTA_PACIENTES)
     paciente = next((p for p in pacientes if p['folio'] == folio), None)
 
     if not paciente:
@@ -105,14 +102,14 @@ pruebas_solicitadas = [p for p in pruebas if p['clave'] in claves_solicitadas]pa
 
     # Obtener solo las pruebas que se le asignaron
     claves_solicitadas = [e['clave'] for e in paciente.get('estudios', [])]
-    pruebas_solicitadas = [p for p in PRUEBAS if p['clave'] in claves_solicitadas]
+    pruebas_solicitadas = [p for p in pruebas if p['clave'] in claves_solicitadas]
 
     if request.method == 'POST':
         clave = request.form['prueba']
         resultado = request.form['resultado']
 
         # Buscar la prueba
-        prueba = next((p for p in PRUEBAS if p['clave'] == clave), None)
+        prueba = next((p for p in pruebas if p['clave'] == clave), None)
         if not prueba:
             return "Prueba no encontrada", 400
 
@@ -126,18 +123,18 @@ pruebas_solicitadas = [p for p in pruebas if p['clave'] in claves_solicitadas]pa
             "fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
 
-        resultados = cargar_datos(RUTA_RESULTADOS)
-        resultados.append(resultado_data)
-        guardar_datos(RUTA_RESULTADOS, resultados)
+        resultados_lista = cargar_datos(RUTA_RESULTADOS)
+        resultados_lista.append(resultado_data)
+        guardar_datos(RUTA_RESULTADOS, resultados_lista)
 
         return redirect(url_for('resultados', folio=folio))
 
-    resultados = [r for r in cargar_datos(RUTA_RESULTADOS) if r['folio'] == folio]
+    resultados_lista = [r for r in cargar_datos(RUTA_RESULTADOS) if r['folio'] == folio]
     return render_template(
         'resultados.html',
         paciente=paciente,
         pruebas=pruebas_solicitadas,
-        resultados=resultados
+        resultados=resultados_lista
     )
 
 @app.route('/editar_resultado/<folio>/<clave>', methods=['GET', 'POST'])
@@ -156,9 +153,9 @@ def editar_resultado(folio, clave):
         return redirect(url_for('resultados', folio=folio))
 
     return f'''
-    <h3>Editar resultado: {resultado['nombre']}</h3>
+    <h3>Editar resultado: {resultado["nombre"]}</h3>
     <form method="POST">
-        <input type="text" name="resultado" value="{resultado['resultado']}" required>
+        <input type="text" name="resultado" value="{resultado["resultado"]}" required>
         <button type="submit">Guardar</button>
         <a href="/resultados/{folio}">Cancelar</a>
     </form>
@@ -182,7 +179,6 @@ def eliminar_paciente(folio):
 @app.route('/admin/pruebas', methods=['GET', 'POST'])
 def admin_pruebas():
     if request.method == 'POST':
-        # Recibir datos del formulario
         nuevas_pruebas = []
         for key in request.form:
             if key.startswith('clave_'):
@@ -193,7 +189,6 @@ def admin_pruebas():
                     "tipo_muestra": request.form[f'tipo_muestra_{idx}'],
                     "id_contenedor": int(request.form[f'id_contenedor_{idx}'])
                 }
-                # Si es multiparamétrica, manejar parámetros
                 if 'multiparametrica' in request.form.getlist(f'tipo_{idx}'):
                     prueba["tipo"] = "multiparametrica"
                     prueba["parametros"] = []
@@ -212,13 +207,11 @@ def admin_pruebas():
                     prueba["valores_normales"] = request.form[f'valores_normales_{idx}']
                 nuevas_pruebas.append(prueba)
 
-        # Guardar en pruebas.json
         with open('datos/pruebas.json', 'w', encoding='utf-8') as f:
             json.dump(nuevas_pruebas, f, indent=4, ensure_ascii=False)
 
         return redirect(url_for('admin_pruebas'))
 
-    # Si es GET, mostrar el formulario con los datos actuales
     pruebas, contenedores, _ = cargar_catalogos()
     return render_template('admin_pruebas.html', pruebas=pruebas, contenedores=contenedores)
 
