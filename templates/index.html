@@ -11,12 +11,8 @@
         .btn { display: inline-block; padding: 8px 16px; background: #0066cc; color: white; border: none; border-radius: 4px; }
         .btn-danger { background: #d9534f; }
         .btn-warning { background: #f0ad4e; }
-        .btn-success { background: #5cb85c; }
         .btn-info { background: #5bc0de; }
-        .actions { white-space: nowrap; }
         .stats { margin: 10px 0; font-size: 0.9em; color: #666; }
-        .search { margin: 20px 0; }
-        .search input { padding: 8px; width: 300px; margin-right: 10px; }
     </style>
 </head>
 <body>
@@ -30,58 +26,38 @@
         <strong>Total de pacientes:</strong> {{ pacientes | length }}
     </div>
 
-    <div class="search">
-        <input type="text" id="searchInput" placeholder="Buscar paciente por nombre o folio..." onkeyup="buscarPacientes()">
-    </div>
-
     <h2>Pacientes Registrados</h2>
-    <table id="pacientesTable">
-        <thead>
-            <tr>
-                <th>Folio</th>
-                <th>Nombre</th>
-                <th>Edad</th>
-                <th>Sexo</th>
-                <th>Médico</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for p in pacientes %}
-            <tr data-name="{{ p.nombre.lower() }}" data-folio="{{ p.folio.lower() }}">
-                <td>{{ p.folio }}</td>
-                <td>{{ p.nombre }}</td>
-                <td>{{ p.edad }}</td>
-                <td>{{ p.sexo }}</td>
-                <td>{{ p.medico }}</td>
-                <td class="actions">
-                    <a href="/resultados/{{ p.folio }}" class="btn">Resultados</a>
-                    <a href="/editar_paciente/{{ p.folio }}" class="btn btn-warning">Editar</a>
-                    <a href="/eliminar_paciente/{{ p.folio }}" class="btn btn-danger" onclick="return confirm('¿Eliminar paciente?')">Eliminar</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
+    <table>
+        <tr>
+            <th>Folio</th>
+            <th>Nombre</th>
+            <th>Edad</th>
+            <th>Sexo</th>
+            <th>Médico</th>
+            <th>Acciones</th>
+        </tr>
+        {% for p in pacientes %}
+        <tr>
+            <td>{{ p.folio }}</td>
+            <td>{{ p.nombre }}</td>
+            <td>{{ p.edad }}</td>
+            <td>
+                {% if p.sexo == "M" %}
+                    Hombre
+                {% elif p.sexo == "F" %}
+                    Mujer
+                {% else %}
+                    Otro
+                {% endif %}
+            </td>
+            <td>{{ p.medico }}</td>
+            <td>
+                <a href="/resultados/{{ p.folio }}" class="btn">Resultados</a>
+                <a href="/editar_paciente/{{ p.folio }}" class="btn btn-warning">Editar</a>
+                <a href="/eliminar_paciente/{{ p.folio }}" class="btn btn-danger" onclick="return confirm('¿Eliminar paciente?')">Eliminar</a>
+            </td>
+        </tr>
+        {% endfor %}
     </table>
-
-    <script>
-        function buscarPacientes() {
-            const input = document.getElementById('searchInput');
-            const filter = input.value.toLowerCase();
-            const table = document.getElementById('pacientesTable');
-            const tr = table.getElementsByTagName('tr');
-
-            for (let i = 1; i < tr.length; i++) {
-                const row = tr[i];
-                const name = row.getAttribute('data-name');
-                const folio = row.getAttribute('data-folio');
-                if (name.includes(filter) || folio.includes(filter)) {
-                    row.style.display = "";
-                } else {
-                    row.style.display = "none";
-                }
-            }
-        }
-    </script>
 </body>
 </html>

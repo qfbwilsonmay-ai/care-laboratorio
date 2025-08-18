@@ -4,17 +4,33 @@
     <title>Registrar Paciente - CARE</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
-        form { max-width: 600px; }
+        form { max-width: 700px; }
         label { display: block; margin: 10px 0 5px; }
         input, select { width: 100%; padding: 8px; margin-bottom: 10px; }
         button { background: #0066cc; color: white; padding: 10px 20px; border: none; }
         .btn { background: #6c757d; color: white; padding: 8px 16px; text-decoration: none; margin: 5px 0; display: inline-block; }
         .prueba-item {
             border: 1px solid #ddd;
-            padding: 15px;
-            margin-bottom: 10px;
+            padding: 12px;
+            margin-bottom: 8px;
             border-radius: 5px;
             background: #f9f9f9;
+            display: none; /* Oculto por defecto, el buscador lo muestra */
+        }
+        .prueba-item.mostrar {
+            display: block;
+        }
+        .buscador {
+            font-size: 1.1em;
+            padding: 10px;
+            width: 100%;
+            margin-bottom: 20px;
+            border: 2px solid #0066cc;
+            border-radius: 5px;
+        }
+        .info {
+            font-size: 0.9em;
+            color: #666;
         }
     </style>
 </head>
@@ -40,28 +56,50 @@
         <label>Médico solicitante:</label>
         <input type="text" name="medico" required>
 
-        <h3>Estudios a realizar</h3>
-        {% for p in pruebas %}
-        <div class="prueba-item">
-            <input type="checkbox" name="pruebas" value="{{ p.clave }}" id="prueba_{{ p.clave }}">
-            <label for="prueba_{{ p.clave }}"><strong>{{ p.nombre }}</strong></label>
-            
-            <div style="margin-left: 20px; font-size: 0.9em;">
-                <label>Procesar en:</label>
-                <select name="laboratorio_{{ p.clave }}" id="lab_{{ p.clave }}">
-                    <option value="matriz" {% if p.procesado_en == "matriz" %}selected{% endif %}>Matriz (CARE)</option>
-                    <option value="sigma" {% if p.procesado_en == "sigma" %}selected{% endif %}>SIGMA (maquila)</option>
-                </select>
+        <h3>Buscar estudios a realizar</h3>
+        <input type="text" id="buscador" class="buscador" placeholder="Escribe para buscar pruebas..." onkeyup="buscarPruebas()">
+
+        <div id="lista-pruebas">
+            {% for p in pruebas %}
+            <div class="prueba-item" data-nombre="{{ p.nombre|lower }}" data-clave="{{ p.clave|lower }}">
+                <input type="checkbox" name="pruebas" value="{{ p.clave }}" id="prueba_{{ p.clave }}">
+                <label for="prueba_{{ p.clave }}"><strong>{{ p.nombre }}</strong></label>
+                
+                <div style="margin-left: 20px; font-size: 0.9em;">
+                    <label>Procesar en:</label>
+                    <select name="laboratorio_{{ p.clave }}" id="lab_{{ p.clave }}">
+                        <option value="matriz" {% if p.procesado_en == "matriz" %}selected{% endif %}>Matriz (CARE)</option>
+                        <option value="sigma" {% if p.procesado_en == "sigma" %}selected{% endif %}>SIGMA (maquila)</option>
+                    </select>
+                </div>
+                
+                <div style="margin-left: 20px; color: #666;" class="info">
+                    Precio: ${{ precios_dict.get('prueba_' + p.clave, {}).get('precio_publico_matriz', 0) }}
+                </div>
             </div>
-            
-            <div style="margin-left: 20px; color: #666;">
-                Precio: ${{ precios_dict.get('prueba_' + p.clave, {}).get('precio_publico_matriz', 0) }}
-            </div>
+            {% endfor %}
         </div>
-        {% endfor %}
 
         <button type="submit">Registrar Paciente</button>
         <a href="/" class="btn">← Inicio</a>
     </form>
+
+    <script>
+        function buscarPruebas() {
+            const input = document.getElementById('buscador');
+            const filter = input.value.toLowerCase();
+            const pruebas = document.getElementsByClassName('prueba-item');
+
+            for (let i = 0; i < pruebas.length; i++) {
+                const nombre = pruebas[i].getAttribute('data-nombre');
+                const clave = pruebas[i].getAttribute('data-clave');
+                if (nombre.includes(filter) || clave.includes(filter)) {
+                    pruebas[i].classList.add('mostrar');
+                } else {
+                    pruebas[i].classList.remove('mostrar');
+                }
+            }
+        }
+    </script>
 </body>
 </html>
