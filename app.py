@@ -167,6 +167,50 @@ def eliminar_paciente(folio):
 
     return redirect(url_for('index'))
 
+@app.route('/admin/pruebas', methods=['GET', 'POST'])
+def admin_pruebas():
+    if request.method == 'POST':
+        # Recibir datos del formulario
+        nuevas_pruebas = []
+        for key in request.form:
+            if key.startswith('clave_'):
+                idx = key.split('_')[1]
+                prueba = {
+                    "clave": request.form[f'clave_{idx}'],
+                    "nombre": request.form[f'nombre_{idx}'],
+                    "tipo_muestra": request.form[f'tipo_muestra_{idx}'],
+                    "id_contenedor": int(request.form[f'id_contenedor_{idx}'])
+                }
+                # Si es multiparamétrica, manejar parámetros
+                if 'multiparametrica' in request.form.getlist(f'tipo_{idx}'):
+                    prueba["tipo"] = "multiparametrica"
+                    prueba["parametros"] = []
+                    param_keys = [k for k in request.form if k.startswith(f'param_clave_{idx}_')]
+                    for pkey in param_keys:
+                        pidx = pkey.split('_')[-1]
+                        prueba["parametros"].append({
+                            "clave": request.form[f'param_clave_{idx}_{pidx}'],
+                            "nombre": request.form[f'param_nombre_{idx}_{pidx}'],
+                            "unidad": request.form[f'param_unidad_{idx}_{pidx}'],
+                            "valores_normales": request.form[f'param_rango_{idx}_{pidx}']
+                        })
+                else:
+                    prueba["tipo"] = "cuantitativa"
+                    prueba["unidad"] = request.form[f'unidad_{idx}']
+                    prueba["valores_normales"] = request.form[f'valores_normales_{idx}']
+                nuevas_pruebas.append(prueba)
+
+        # Guardar en pruebas.json
+        with open('datos/pruebas.json', 'w', encoding='utf-8') as f:
+            json.dump(nuevas_pruebas, f, indent=4, ensure_ascii=False)
+
+        return redirect(url_for('admin_pruebas'))
+
+    # Si es GET, mostrar el formulario con los datos actuales
+    pruebas = cargar_datos('datos/pruebas.json')
+    contenedores = cargar_datos('datos/contenedores.json')
+    return render_template('admin_pruebas.html', pruebas=pruebas, contenedores=contenedores)
+
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port, debug=False)

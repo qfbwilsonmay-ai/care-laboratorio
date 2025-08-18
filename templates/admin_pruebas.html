@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Administrar Pruebas - CARE</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
+        input, select { width: 100%; padding: 8px; margin: 5px 0; }
+        button { background: #d9534f; color: white; padding: 10px 20px; border: none; margin: 10px 0; }
+        .parametros { margin-left: 20px; background: #f9f9f9; padding: 10px; border: 1px dashed #ccc; }
+        .prueba { margin-bottom: 30px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Administrar Pruebas y Rangos</h1>
+    <a href="/">← Volver al inicio</a>
+    <form method="POST">
+        {% for p in pruebas %}
+        <div class="prueba">
+            <h3>Prueba: {{ loop.index }}</h3>
+            <label>Clave:</label>
+            <input type="text" name="clave_{{ loop.index }}" value="{{ p.clave }}" required>
+
+            <label>Nombre:</label>
+            <input type="text" name="nombre_{{ loop.index }}" value="{{ p.nombre }}" required>
+
+            <label>Tipo de muestra:</label>
+            <input type="text" name="tipo_muestra_{{ loop.index }}" value="{{ p.tipo_muestra }}" required>
+
+            <label>Contenedor:</label>
+            <select name="id_contenedor_{{ loop.index }}" required>
+                {% for c in contenedores %}
+                <option value="{{ c.id }}" {% if c.id == p.id_contenedor %}selected{% endif %}>{{ c.nombre }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Tipo:</label>
+            <label><input type="checkbox" name="tipo_{{ loop.index }}" value="multiparametrica" 
+                {% if p.tipo == 'multiparametrica' %}checked{% endif %}> Multiparamétrica</label>
+
+            {% if p.tipo == 'multiparametrica' and p.parametros %}
+            <div class="parametros">
+                <h4>Parámetros</h4>
+                {% for param in p.parametros %}
+                <div>
+                    <label>Clave:</label>
+                    <input type="text" name="param_clave_{{ loop.index }}_{{ loop.index0 }}" value="{{ param.clave }}" required>
+
+                    <label>Nombre:</label>
+                    <input type="text" name="param_nombre_{{ loop.index }}_{{ loop.index0 }}" value="{{ param.nombre }}" required>
+
+                    <label>Unidad:</label>
+                    <input type="text" name="param_unidad_{{ loop.index }}_{{ loop.index0 }}" value="{{ param.unidad }}" required>
+
+                    <label>Valores Normales:</label>
+                    <input type="text" name="param_rango_{{ loop.index }}_{{ loop.index0 }}" value="{{ param.valores_normales }}" required>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <label>Unidad:</label>
+            <input type="text" name="unidad_{{ loop.index }}" value="{{ p.unidad }}">
+
+            <label>Valores Normales:</label>
+            <input type="text" name="valores_normales_{{ loop.index }}" value="{{ p.valores_normales }}">
+            {% endif %}
+        </div>
+        {% endfor %}
+
+        <button type="submit">Guardar Cambios</button>
+    </form>
+</body>
+</html>
