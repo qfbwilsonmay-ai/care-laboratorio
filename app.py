@@ -14,17 +14,19 @@ RUTA_RESULTADOS = 'datos/resultados.json'
 # Aseguramos que la carpeta 'datos' exista
 os.makedirs('datos', exist_ok=True)
 
-# Cargar catálogos
-PRUEBAS = cargar_datos('datos/pruebas.json')
-CONTENEDORES = cargar_datos('datos/contenedores.json')
-PRECIOS = cargar_datos('datos/precios.json')
-
-# Crear diccionario de precios: tipo_elemento_id -> precio
-precios_dict = {}
-for p in PRECIOS:
-    key = f"{p['tipo']}_{p['id_elemento']}"
-    precios_dict[key] = p['precio']
-
+def cargar_catalogos():
+    """Carga los catálogos desde los archivos JSON cada vez que se llama"""
+    pruebas = cargar_datos('datos/pruebas.json')
+    contenedores = cargar_datos('datos/contenedores.json')
+    precios = cargar_datos('datos/precios.json')
+    
+    # Crear diccionario de precios
+    precios_dict = {}
+    for p in precios:
+        key = f"{p['tipo']}_{p['id_elemento']}"
+        precios_dict[key] = p['precio']
+    
+    return pruebas, contenedores, precios_dict
 @app.route('/')
 def index():
     pacientes = cargar_datos(RUTA_PACIENTES)
@@ -76,16 +78,26 @@ def registro():
         return redirect(url_for('index'))
 
     # Pasar datos a la plantilla
-    return render_template(
-        'registro.html',
-        pruebas=PRUEBAS,
-        contenedores=CONTENEDORES,
-        precios=precios_dict
-    )
+    pruebas, contenedores, precios_dict = cargar_catalogos()
+return render_template(
+    'registro.html',
+    pruebas=pruebas,
+    contenedores=contenedores,
+    precios=precios_dict
+)
 
 @app.route('/resultados/<folio>', methods=['GET', 'POST'])
 def resultados(folio):
-    pacientes = cargar_datos(RUTA_PACIENTES)
+    pruebas, contenedores, precios_dict = cargar_catalogos()
+pacientes = cargar_datos(RUTA_PACIENTES)
+paciente = next((p for p in pacientes if p['folio'] == folio), None)
+
+if not paciente:
+    return "Paciente no encontrado", 404
+
+# Obtener solo las pruebas que se le asignaron
+claves_solicitadas = [e['clave'] for e in paciente.get('estudios', [])]
+pruebas_solicitadas = [p for p in pruebas if p['clave'] in claves_solicitadas]pacientes = cargar_datos(RUTA_PACIENTES)
     paciente = next((p for p in pacientes if p['folio'] == folio), None)
 
     if not paciente:
@@ -207,8 +219,7 @@ def admin_pruebas():
         return redirect(url_for('admin_pruebas'))
 
     # Si es GET, mostrar el formulario con los datos actuales
-    pruebas = cargar_datos('datos/pruebas.json')
-    contenedores = cargar_datos('datos/contenedores.json')
+    pruebas, contenedores, _ = cargar_catalogos()
     return render_template('admin_pruebas.html', pruebas=pruebas, contenedores=contenedores)
 
 if __name__ == '__main__':
