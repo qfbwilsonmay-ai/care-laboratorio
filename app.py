@@ -62,7 +62,6 @@ def registro():
         for clave in pruebas_seleccionadas:
             prueba = next((p for p in pruebas if p['clave'] == clave), None)
             if prueba:
-                # Obtener precio según laboratorio
                 precio_data = precios_dict.get(f"prueba_{clave}")
                 if not precio_data:
                     precio_final = 0

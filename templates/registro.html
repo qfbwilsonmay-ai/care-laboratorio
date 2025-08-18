@@ -15,7 +15,7 @@
             margin-bottom: 8px;
             border-radius: 5px;
             background: #f9f9f9;
-            display: none; /* Oculto por defecto, el buscador lo muestra */
+            display: none;
         }
         .prueba-item.mostrar {
             display: block;
@@ -27,6 +27,21 @@
             margin-bottom: 20px;
             border: 2px solid #0066cc;
             border-radius: 5px;
+        }
+        .seleccionados {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px dashed #0066cc;
+            border-radius: 5px;
+            background: #e6f7ff;
+        }
+        .seleccionados ul {
+            list-style: none;
+            padding: 0;
+        }
+        .seleccionados li {
+            margin: 5px 0;
+            font-weight: bold;
         }
         .info {
             font-size: 0.9em;
@@ -62,12 +77,12 @@
         <div id="lista-pruebas">
             {% for p in pruebas %}
             <div class="prueba-item" data-nombre="{{ p.nombre|lower }}" data-clave="{{ p.clave|lower }}">
-                <input type="checkbox" name="pruebas" value="{{ p.clave }}" id="prueba_{{ p.clave }}">
+                <input type="checkbox" name="pruebas" value="{{ p.clave }}" id="prueba_{{ p.clave }}" onchange="actualizarSeleccionados()">
                 <label for="prueba_{{ p.clave }}"><strong>{{ p.nombre }}</strong></label>
                 
                 <div style="margin-left: 20px; font-size: 0.9em;">
                     <label>Procesar en:</label>
-                    <select name="laboratorio_{{ p.clave }}" id="lab_{{ p.clave }}">
+                    <select name="laboratorio_{{ p.clave }}" id="lab_{{ p.clave }}" onchange="actualizarSeleccionados()">
                         <option value="matriz" {% if p.procesado_en == "matriz" %}selected{% endif %}>Matriz (CARE)</option>
                         <option value="sigma" {% if p.procesado_en == "sigma" %}selected{% endif %}>SIGMA (maquila)</option>
                     </select>
@@ -78,6 +93,13 @@
                 </div>
             </div>
             {% endfor %}
+        </div>
+
+        <div class="seleccionados">
+            <h4>Estudios seleccionados:</h4>
+            <ul id="lista-seleccionados">
+                <li>(Ninguno aún)</li>
+            </ul>
         </div>
 
         <button type="submit">Registrar Paciente</button>
@@ -99,7 +121,37 @@
                     pruebas[i].classList.remove('mostrar');
                 }
             }
+            actualizarSeleccionados();
         }
+
+        function actualizarSeleccionados() {
+            const checkboxes = document.querySelectorAll('input[name="pruebas"]:checked');
+            const lista = document.getElementById('lista-seleccionados');
+            lista.innerHTML = '';
+
+            if (checkboxes.length === 0) {
+                lista.innerHTML = '<li>(Ninguno aún)</li>';
+                return;
+            }
+
+            checkboxes.forEach(checkbox => {
+                const label = document.querySelector(`label[for="${checkbox.id}"]`).innerText;
+                const laboratorio = document.querySelector(`#lab_${checkbox.value}`).value;
+                const labText = laboratorio === 'matriz' ? 'Matriz' : 'SIGMA';
+                const li = document.createElement('li');
+                li.textContent = `${label} (${labText})`;
+                lista.appendChild(li);
+            });
+        }
+
+        // Inicializar al cargar
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                const allPruebas = document.querySelectorAll('.prueba-item');
+                allPruebas.forEach(el => el.classList.add('mostrar'));
+            }, 100);
+            actualizarSeleccionados();
+        });
     </script>
 </body>
 </html>
