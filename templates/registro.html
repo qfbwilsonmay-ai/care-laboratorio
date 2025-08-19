@@ -71,7 +71,7 @@
 </head>
 <body>
     <h1>Registrar Paciente</h1>
-    <form method="POST">
+    <form method="POST" id="registroForm">
         <div class="container">
             <div class="left-column">
                 <label>Nombre completo:</label>
@@ -129,8 +129,15 @@
         <a href="/" class="btn">← Inicio</a>
     </form>
 
-    <!-- Botón anclado -->
-    <button type="submit" formaction="{{ url_for('registro') }}" class="btn-anclado">Registrar Paciente</button>
+    <!-- Botón anclado y funcional -->
+<button type="submit" form="registroForm" class="btn-anclado">Registrar Paciente</button>
+
+<script>
+    // Aseguramos que el formulario tenga el ID necesario
+    document.getElementById('registroForm').addEventListener('submit', function(e) {
+        console.log('Formulario enviado');
+    });
+</script>
 
     <script>
         function buscarPruebas() {
