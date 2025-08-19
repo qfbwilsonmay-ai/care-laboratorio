@@ -133,9 +133,14 @@ def resumen(folio):
         costo_matriz = precio_data.get('costos', {}).get('matriz', {}) if precio_data else {}
         costo_sigma = precio_data.get('costos', {}).get('sigma', {}) if precio_data else {}
 
+        # Solo el costo de "maquila" (sin materiales ni envío)
         maquila_matriz += costo_matriz.get('maquila', 0)
         maquila_sigma += costo_sigma.get('maquila', 0)
+
+        # Materiales: suma de ambos
         materiales += costo_matriz.get('materiales', 0) + costo_sigma.get('materiales', 0)
+
+        # Envío: suma de ambos
         envio += costo_matriz.get('envio', 0) + costo_sigma.get('envio', 0)
 
     total_maquila = maquila_matriz + maquila_sigma
