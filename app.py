@@ -39,37 +39,27 @@ def registro():
         nombre = request.form['nombre']
         fecha_nac = request.form['fecha_nac']
         sexo = request.form['sexo']
-        diagnostico = request.form['diagnostico']  # Obligatorio
+        diagnostico = request.form['diagnostico']
         medico = request.form['medico']
 
-        # Obtener estudios seleccionados
         pruebas_seleccionadas = request.form.getlist('pruebas')
-
-        # Laboratorio para cada prueba
         laboratorios = {}
         for clave in pruebas_seleccionadas:
             lab = request.form.get(f'laboratorio_{clave}', 'matriz')
             laboratorios[clave] = lab
 
         folio = generar_folio()
-        # Calcular edad solo si hay fecha de nacimiento
-        if fecha_nac:
-            edad = calcular_edad(fecha_nac)
-        else:
-            edad = int(request.form['edad_manual']) if request.form['edad_manual'] else 0
+        edad = calcular_edad(fecha_nac) if fecha_nac else request.form.get('edad_manual', 0)
 
-        # Cargar pruebas y precios
-        pruebas, contenedores, precios_lista, precios_dict = cargar_catalogos()
+        pruebas, contenedores, _, precios_dict = cargar_catalogos()
 
-        # Lista para guardar los estudios con su info
         estudios = []
         for clave in pruebas_seleccionadas:
             prueba = next((p for p in pruebas if p['clave'] == clave), None)
             if prueba:
                 precio_data = precios_dict.get(f"prueba_{clave}")
-                if not precio_data:
-                    precio_final = 0
-                else:
+                precio_final = 0
+                if precio_
                     if laboratorios[clave] == 'sigma':
                         precio_final = precio_data.get('precio_publico_sigma', 0)
                     else:
@@ -86,7 +76,7 @@ def registro():
             "folio": folio,
             "nombre": nombre,
             "fecha_nacimiento": fecha_nac,
-            "edad": edad,
+            "edad": int(edad) if edad else 0,
             "sexo": sexo,
             "diagnostico": diagnostico,
             "medico": medico,
@@ -100,8 +90,7 @@ def registro():
 
         return redirect(url_for('index'))
 
-    # Cargar datos para la plantilla
-    pruebas, contenedores, precios_lista, precios_dict = cargar_catalogos()
+    pruebas, contenedores, _, precios_dict = cargar_catalogos()
     return render_template(
         'registro.html',
         pruebas=pruebas,
@@ -118,30 +107,25 @@ def editar_paciente(folio):
         return "Paciente no encontrado", 404
 
     if request.method == 'POST':
-        # Actualizar datos básicos
         paciente['nombre'] = request.form['nombre']
         paciente['fecha_nacimiento'] = request.form['fecha_nac']
         paciente['sexo'] = request.form['sexo']
         paciente['diagnostico'] = request.form['diagnostico']
         paciente['medico'] = request.form['medico']
 
-        # Calcular edad si hay fecha de nacimiento
         if paciente['fecha_nacimiento']:
             paciente['edad'] = calcular_edad(paciente['fecha_nacimiento'])
+        elif request.form.get('edad_manual'):
+            paciente['edad'] = int(request.form['edad_manual'])
 
-        # Obtener nuevos estudios seleccionados
         nuevos_estudios_claves = request.form.getlist('nuevos_estudios')
-
-        # Laboratorio para nuevos estudios
         laboratorios = {}
         for clave in nuevos_estudios_claves:
             lab = request.form.get(f'laboratorio_nuevo_{clave}', 'matriz')
             laboratorios[clave] = lab
 
-        # Cargar catálogos
-        pruebas, contenedores, precios_lista, precios_dict = cargar_catalogos()
+        pruebas, contenedores, _, precios_dict = cargar_catalogos()
 
-        # Crear lista de nuevos estudios (sin duplicados)
         nuevos_estudios = []
         claves_existentes = [e['clave'] for e in paciente.get('estudios', [])]
         for clave in nuevos_estudios_claves:
@@ -149,9 +133,8 @@ def editar_paciente(folio):
                 prueba = next((p for p in pruebas if p['clave'] == clave), None)
                 if prueba:
                     precio_data = precios_dict.get(f"prueba_{clave}")
-                    if not precio_data:
-                        precio_final = 0
-                    else:
+                    precio_final = 0
+                    if precio_
                         if laboratorios[clave] == 'sigma':
                             precio_final = precio_data.get('precio_publico_sigma', 0)
                         else:
@@ -164,31 +147,23 @@ def editar_paciente(folio):
                         "procesado_en": laboratorios[clave]
                     })
 
-        # Añadir nuevos estudios
         if 'estudios' not in paciente:
             paciente['estudios'] = []
         paciente['estudios'].extend(nuevos_estudios)
 
-        # Eliminar estudios marcados para borrar
         estudios_a_mantener = []
         for estudio in paciente['estudios']:
             if f"eliminar_{estudio['clave']}" not in request.form:
                 estudios_a_mantener.append(estudio)
         paciente['estudios'] = estudios_a_mantener
 
-        # Guardar cambios
         guardar_datos(RUTA_PACIENTES, pacientes)
-
         return redirect(url_for('index'))
 
-    # Cargar datos para la plantilla
-    pruebas, contenedores, precios_lista, precios_dict = cargar_catalogos()
+    pruebas, contenedores, _, precios_dict = cargar_catalogos()
 
-    # Estudios ya asignados
     claves_asignadas = [e['clave'] for e in paciente.get('estudios', [])]
     estudios_asignados = paciente.get('estudios', [])
-
-    # Pruebas disponibles (que no tenga el paciente)
     pruebas_disponibles = [p for p in pruebas if p['clave'] not in claves_asignadas]
 
     return render_template(
@@ -202,22 +177,19 @@ def editar_paciente(folio):
 
 @app.route('/resultados/<folio>', methods=['GET', 'POST'])
 def resultados(folio):
-    pruebas, contenedores, precios_lista, precios_dict = cargar_catalogos()
+    pruebas, contenedores, _, precios_dict = cargar_catalogos()
     pacientes = cargar_datos(RUTA_PACIENTES)
     paciente = next((p for p in pacientes if p['folio'] == folio), None)
 
     if not paciente:
         return "Paciente no encontrado", 404
 
-    # Obtener solo las pruebas que se le asignaron
     claves_solicitadas = [e['clave'] for e in paciente.get('estudios', [])]
     pruebas_solicitadas = [p for p in pruebas if p['clave'] in claves_solicitadas]
 
     if request.method == 'POST':
         clave = request.form['prueba']
         resultado = request.form['resultado']
-
-        # Buscar la prueba
         prueba = next((p for p in pruebas if p['clave'] == clave), None)
         if not prueba:
             return "Prueba no encontrada", 400
@@ -235,7 +207,6 @@ def resultados(folio):
         resultados = cargar_datos(RUTA_RESULTADOS)
         resultados.append(resultado_data)
         guardar_datos(RUTA_RESULTADOS, resultados)
-
         return redirect(url_for('resultados', folio=folio))
 
     resultados = [r for r in cargar_datos(RUTA_RESULTADOS) if r['folio'] == folio]
@@ -245,45 +216,6 @@ def resultados(folio):
         pruebas=pruebas_solicitadas,
         resultados=resultados
     )
-
-@app.route('/editar_resultado/<folio>/<clave>', methods=['GET', 'POST'])
-def editar_resultado(folio, clave):
-    resultados = cargar_datos(RUTA_RESULTADOS)
-    resultado = next((r for r in resultados if r['folio'] == folio and r['clave'] == clave), None)
-
-    if not resultado:
-        return "Resultado no encontrado", 404
-
-    if request.method == 'POST':
-        nuevo_resultado = request.form['resultado']
-        resultado['resultado'] = nuevo_resultado
-        resultado['fecha'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        guardar_datos(RUTA_RESULTADOS, resultados)
-        return redirect(url_for('resultados', folio=folio))
-
-    return f'''
-    <h3>Editar resultado: {resultado["nombre"]}</h3>
-    <form method="POST">
-        <input type="text" name="resultado" value="{resultado["resultado"]}" required>
-        <button type="submit">Guardar</button>
-        <a href="/resultados/{folio}">Cancelar</a>
-    </form>
-    '''
-
-@app.route('/eliminar_paciente/<folio>')
-def eliminar_paciente(folio):
-    pacientes = cargar_datos(RUTA_PACIENTES)
-    resultados = cargar_datos(RUTA_RESULTADOS)
-
-    # Filtrar paciente
-    pacientes = [p for p in pacientes if p['folio'] != folio]
-    guardar_datos(RUTA_PACIENTES, pacientes)
-
-    # También eliminar sus resultados
-    resultados = [r for r in resultados if r['folio'] != folio]
-    guardar_datos(RUTA_RESULTADOS, resultados)
-
-    return redirect(url_for('index'))
 
 @app.route('/admin/precios', methods=['GET', 'POST'])
 def admin_precios():
@@ -337,17 +269,13 @@ def admin_precios():
                     "validado": validado
                 })
 
-        # Guardar en precios.json
         with open('datos/precios.json', 'w', encoding='utf-8') as f:
             json.dump(nuevos_precios, f, indent=4, ensure_ascii=False)
-
         return redirect(url_for('admin_precios'))
 
-    # Si es GET, cargar datos
     pruebas = cargar_datos('datos/pruebas.json')
     precios = cargar_datos('datos/precios.json')
     precios_dict = {f"{p['tipo']}_{p['id_elemento']}": p for p in precios}
-
     return render_template('admin_precios.html', pruebas=pruebas, precios_dict=precios_dict)
 
 @app.route('/admin/pruebas', methods=['GET', 'POST'])
@@ -357,37 +285,36 @@ def admin_pruebas():
         for key in request.form:
             if key.startswith('clave_'):
                 idx = key.split('_')[1]
-                prueba = {
-                    "clave": request.form[f'clave_{idx}'],
-                    "nombre": request.form[f'nombre_{idx}'],
-                    "tipo_muestra": request.form[f'tipo_muestra_{idx}'],
-                    "id_contenedor": int(request.form[f'id_contenedor_{idx}'])
-                }
-                if 'multiparametrica' in request.form.getlist(f'tipo_{idx}'):
-                    prueba["tipo"] = "multiparametrica"
-                    prueba["parametros"] = []
-                    param_keys = [k for k in request.form if k.startswith(f'param_clave_{idx}_')]
-                    for pkey in param_keys:
-                        pidx = pkey.split('_')[-1]
-                        prueba["parametros"].append({
-                            "clave": request.form[f'param_clave_{idx}_{pidx}'],
-                            "nombre": request.form[f'param_nombre_{idx}_{pidx}'],
-                            "unidad": request.form[f'param_unidad_{idx}_{pidx}'],
-                            "valores_normales": request.form[f'param_rango_{idx}_{pidx}']
-                        })
-                else:
-                    prueba["tipo"] = "cuantitativa"
-                    prueba["unidad"] = request.form[f'unidad_{idx}']
-                    prueba["valores_normales"] = request.form[f'valores_normales_{idx}']
-                nuevas_pruebas.append(prueba)
+                try:
+                    prueba = {
+                        "clave": request.form[f'clave_{idx}'].strip(),
+                        "nombre": request.form[f'nombre_{idx}'].strip(),
+                        "tipo_muestra": request.form[f'tipo_muestra_{idx}'].strip(),
+                        "id_contenedor": int(request.form[f'id_contenedor_{idx}']),
+                        "unidad": request.form[f'unidad_{idx}'].strip(),
+                        "valores_normales": request.form[f'valores_normales_{idx}'].strip(),
+                        "tipo": "cuantitativa"
+                    }
+                    nuevas_pruebas.append(prueba)
+                except Exception as e:
+                    continue
 
         with open('datos/pruebas.json', 'w', encoding='utf-8') as f:
             json.dump(nuevas_pruebas, f, indent=4, ensure_ascii=False)
-
         return redirect(url_for('admin_pruebas'))
 
     pruebas, contenedores, _, _ = cargar_catalogos()
     return render_template('admin_pruebas.html', pruebas=pruebas, contenedores=contenedores)
+
+@app.route('/eliminar_paciente/<folio>')
+def eliminar_paciente(folio):
+    pacientes = cargar_datos(RUTA_PACIENTES)
+    resultados = cargar_datos(RUTA_RESULTADOS)
+    pacientes = [p for p in pacientes if p['folio'] != folio]
+    guardar_datos(RUTA_PACIENTES, pacientes)
+    resultados = [r for r in resultados if r['folio'] != folio]
+    guardar_datos(RUTA_RESULTADOS, resultados)
+    return redirect(url_for('index'))
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 10000))
