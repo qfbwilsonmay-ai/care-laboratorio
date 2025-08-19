@@ -18,6 +18,7 @@
         }
         label { display: block; margin: 10px 0 5px; }
         input, select { width: 100%; padding: 8px; margin-bottom: 10px; }
+        button { background: #0066cc; color: white; padding: 10px 20px; border: none; }
         .btn { background: #6c757d; color: white; padding: 8px 16px; text-decoration: none; margin: 5px 0; display: inline-block; }
         .prueba-item {
             border: 1px solid #ddd;
@@ -78,7 +79,15 @@
                 <input type="text" name="nombre" required>
 
                 <label>Fecha de nacimiento (AAAA-MM-DD):</label>
-                <input type="date" name="fecha_nac" required>
+                <input type="date" name="fecha_nac" id="fecha_nac">
+
+                <div>
+                    <input type="checkbox" id="usar_edad_manual" onchange="toggleEdad()">
+                    <label for="usar_edad_manual">Ingresar edad manualmente</label>
+                </div>
+
+                <label>Edad:</label>
+                <input type="number" name="edad_manual" id="edad_manual" disabled>
 
                 <label>Sexo:</label>
                 <select name="sexo" required>
@@ -88,7 +97,7 @@
                 </select>
 
                 <label>Diagnóstico (opcional):</label>
-                <input type="text" name="diagnostico">
+                <input type="text" name="diagnostico" required>
 
                 <label>Médico solicitante:</label>
                 <input type="text" name="medico" required>
@@ -129,17 +138,16 @@
         <a href="/" class="btn">← Inicio</a>
     </form>
 
-    <!-- Botón anclado y funcional -->
-<button type="submit" form="registroForm" class="btn-anclado">Registrar Paciente</button>
-
-<script>
-    // Aseguramos que el formulario tenga el ID necesario
-    document.getElementById('registroForm').addEventListener('submit', function(e) {
-        console.log('Formulario enviado');
-    });
-</script>
+    <!-- Botón anclado funcional -->
+    <button type="submit" form="registroForm" class="btn-anclado">Registrar Paciente</button>
 
     <script>
+        function toggleEdad() {
+            const usarManual = document.getElementById('usar_edad_manual').checked;
+            document.getElementById('fecha_nac').disabled = usarManual;
+            document.getElementById('edad_manual').disabled = !usarManual;
+        }
+
         function buscarPruebas() {
             const input = document.getElementById('buscador');
             const filter = input.value.toLowerCase();

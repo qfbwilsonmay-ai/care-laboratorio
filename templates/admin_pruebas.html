@@ -11,7 +11,7 @@
         .btn-guardar { background: #28a745; color: white; border: none; }
         .btn-editar { background: #007bff; color: white; border: none; }
         .btn-validar { background: #ffc107; color: black; border: none; }
-        .fila-validada { background-color: #d4edda; } /* Verde claro */
+        .fila-validada { background-color: #d4edda; }
         .fila-normal { background-color: white; }
         .buscador {
             font-size: 1.1em;
@@ -42,7 +42,7 @@
     <a href="/admin/precios" class="btn">Administrar Precios</a>
 
     <form method="POST" id="formPruebas">
-        <input type="text" id="buscador" class="buscador" placeholder="Buscar pruebas..." onkeyup="buscarPruebas()">
+        <input type="text" id="buscador" class="buscador" placeholder="Buscar por clave o nombre..." onkeyup="buscarPruebas()">
 
         <table id="tablaPruebas">
             <tr>
@@ -77,8 +77,8 @@
                 </td>
                 <td>
                     {% if p.tipo == "cuantitativa" %}
-                        <input type="text" name="unidad_{{ loop.index }}" value="{{ p.unidad }}" placeholder="Unidad" {{ 'readonly' if validado else '' }}>
-                        <input type="text" name="valores_normales_{{ loop.index }}" value="{{ p.valores_normales }}" placeholder="Valores normales" {{ 'readonly' if validado else '' }}>
+                        <input type="text" name="unidad_{{ loop.index }}" value="{{ p.unidad }}" placeholder="Unidad" required {{ 'readonly' if validado else '' }}>
+                        <input type="text" name="valores_normales_{{ loop.index }}" value="{{ p.valores_normales }}" placeholder="Valores normales" required {{ 'readonly' if validado else '' }}>
                         <input type="hidden" name="tipo_{{ loop.index }}" value="cuantitativa">
                     {% elif p.tipo == "multiparametrica" %}
                         <input type="hidden" name="tipo_{{ loop.index }}" value="multiparametrica">
