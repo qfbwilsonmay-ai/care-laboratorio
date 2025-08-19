@@ -4,7 +4,18 @@
     <title>Editar Paciente - CARE</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
-        form { max-width: 700px; }
+        .container { display: flex; gap: 20px; }
+        .left-column { flex: 1; max-height: 80vh; overflow-y: auto; }
+        .right-column {
+            width: 300px;
+            background: #e6f7ff;
+            border: 1px dashed #0066cc;
+            border-radius: 5px;
+            padding: 15px;
+            position: sticky;
+            top: 20px;
+            align-self: flex-start;
+        }
         label { display: block; margin: 10px 0 5px; }
         input, select { width: 100%; padding: 8px; margin-bottom: 10px; }
         button { background: #0066cc; color: white; padding: 10px 20px; border: none; }
@@ -15,8 +26,48 @@
             margin-bottom: 8px;
             border-radius: 5px;
             background: #f9f9f9;
+            display: none;
         }
-        .info { font-size: 0.9em; color: #666; }
+        .prueba-item.mostrar {
+            display: block;
+        }
+        .buscador {
+            font-size: 1.1em;
+            padding: 10px;
+            width: 100%;
+            margin-bottom: 20px;
+            border: 2px solid #0066cc;
+            border-radius: 5px;
+        }
+        .seleccionados h4 {
+            margin-top: 0;
+            color: #0066cc;
+        }
+        .seleccionados ul {
+            list-style: none;
+            padding: 0;
+        }
+        .seleccionados li {
+            margin: 8px 0;
+            font-weight: bold;
+        }
+        .info {
+            font-size: 0.9em;
+            color: #666;
+        }
+        .btn-anclado {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #0066cc;
+            color: white;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1em;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 100;
+        }
         .estudio-asignado {
             border: 1px solid #0066cc;
             padding: 10px;
@@ -28,59 +79,168 @@
 </head>
 <body>
     <h1>Editar Paciente: {{ paciente.nombre }}</h1>
-    <form method="POST">
-        <label>Nombre completo:</label>
-        <input type="text" name="nombre" value="{{ paciente.nombre }}" required>
+    <form method="POST" id="editarForm">
+        <div class="container">
+            <div class="left-column">
+                <label>Nombre completo:</label>
+                <input type="text" name="nombre" value="{{ paciente.nombre }}" required>
 
-        <label>Fecha de nacimiento (AAAA-MM-DD):</label>
-        <input type="date" name="fecha_nac" value="{{ paciente.fecha_nacimiento }}">
+                <label>Fecha de nacimiento (AAAA-MM-DD):</label>
+                <input type="date" name="fecha_nac" value="{{ paciente.fecha_nacimiento }}" id="fecha_nac">
 
-        <label>Sexo:</label>
-        <select name="sexo" required>
-            <option value="M" {% if paciente.sexo == "M" %}selected{% endif %}>Hombre</option>
-            <option value="F" {% if paciente.sexo == "F" %}selected{% endif %}>Mujer</option>
-            <option value="O" {% if paciente.sexo == "O" %}selected{% endif %}>Otro</option>
-        </select>
-
-        <label>Diagnóstico (opcional):</label>
-        <input type="text" name="diagnostico" value="{{ paciente.diagnostico }}" required>
-
-        <label>Médico solicitante:</label>
-        <input type="text" name="medico" value="{{ paciente.medico }}" required>
-
-        <h3>Estudios ya asignados</h3>
-        {% for estudio in estudios_asignados %}
-        <div class="estudio-asignado">
-            {{ estudio.nombre }} - ${{ estudio.precio }}
-            <input type="checkbox" name="eliminar_{{ estudio.clave }}" id="eliminar_{{ estudio.clave }}">
-            <label for="eliminar_{{ estudio.clave }}">Eliminar</label>
-        </div>
-        {% endfor %}
-
-        <h3>Agregar nuevos estudios</h3>
-        <div style="max-height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
-            {% for p in pruebas %}
-            <div class="prueba-item">
-                <input type="checkbox" name="nuevos_estudios" value="{{ p.clave }}" id="nuevo_{{ p.clave }}">
-                <label for="nuevo_{{ p.clave }}"><strong>{{ p.nombre }}</strong></label>
-                
-                <div style="margin-left: 20px; font-size: 0.9em;">
-                    <label>Procesar en:</label>
-                    <select name="laboratorio_nuevo_{{ p.clave }}" id="lab_nuevo_{{ p.clave }}">
-                        <option value="matriz">Matriz (CARE)</option>
-                        <option value="sigma">SIGMA (maquila)</option>
-                    </select>
+                <div>
+                    <input type="checkbox" id="usar_edad_manual" onchange="toggleEdad()">
+                    <label for="usar_edad_manual">Ingresar edad manualmente</label>
                 </div>
-                
-                <div style="margin-left: 20px; color: #666;" class="info">
-                    Precio: ${{ precios_dict.get('prueba_' + p.clave, {}).get('precio_publico_matriz', 0) }}
+
+                <label>Edad:</label>
+                <input type="number" name="edad_manual" id="edad_manual" {% if paciente.fecha_nacimiento %}disabled{% else %}value="{{ paciente.edad }}"{% endif %}>
+
+                <label>Sexo:</label>
+                <select name="sexo" required>
+                    <option value="M" {% if paciente.sexo == "M" %}selected{% endif %}>Hombre</option>
+                    <option value="F" {% if paciente.sexo == "F" %}selected{% endif %}>Mujer</option>
+                    <option value="O" {% if paciente.sexo == "O" %}selected{% endif %}>Otro</option>
+                </select>
+
+                <label>Diagnóstico (opcional):</label>
+                <input type="text" name="diagnostico" value="{{ paciente.diagnostico }}" required>
+
+                <label>Médico solicitante:</label>
+                <input type="text" name="medico" value="{{ paciente.medico }}" required>
+
+                <h3>Estudios ya asignados</h3>
+                {% for estudio in estudios_asignados %}
+                <div class="estudio-asignado">
+                    {{ estudio.nombre }} - ${{ estudio.precio }}
+                    <input type="checkbox" name="eliminar_{{ estudio.clave }}" id="eliminar_{{ estudio.clave }}">
+                    <label for="eliminar_{{ estudio.clave }}">Eliminar</label>
+                </div>
+                {% endfor %}
+
+                <h3>Agregar nuevos estudios</h3>
+                <input type="text" id="buscador" class="buscador" placeholder="Escribe para buscar pruebas..." onkeyup="buscarPruebas()">
+
+                <div id="lista-pruebas">
+                    {% for p in pruebas %}
+                    <div class="prueba-item" data-nombre="{{ p.nombre|lower }}" data-clave="{{ p.clave|lower }}">
+                        <input type="checkbox" name="nuevos_estudios" value="{{ p.clave }}" id="nuevo_{{ p.clave }}" onchange="actualizarSeleccionados()">
+                        <label for="nuevo_{{ p.clave }}"><strong>{{ p.nombre }}</strong></label>
+                        
+                        <div style="margin-left: 20px; font-size: 0.9em;">
+                            <label>Procesar en:</label>
+                            <select name="laboratorio_nuevo_{{ p.clave }}" id="lab_nuevo_{{ p.clave }}" onchange="actualizarSeleccionados()">
+                                <option value="matriz">Matriz (CARE)</option>
+                                <option value="sigma">SIGMA (maquila)</option>
+                            </select>
+                        </div>
+                        
+                        <div style="margin-left: 20px; color: #666;" class="info">
+                            Precio: ${{ precios_dict.get('prueba_' + p.clave, {}).get('precio_publico_matriz', 0) }}
+                        </div>
+                    </div>
+                    {% endfor %}
                 </div>
             </div>
-            {% endfor %}
+
+            <div class="right-column">
+                <h4>Estudios seleccionados</h4>
+                <ul id="lista-seleccionados">
+                    {% for estudio in estudios_asignados %}
+                    <li>{{ estudio.nombre }}</li>
+                    {% endfor %}
+                    <li id="ninguno" style="display: none;">(Ninguno aún)</li>
+                </ul>
+            </div>
         </div>
 
-        <button type="submit">Guardar Cambios</button>
         <a href="/" class="btn">← Inicio</a>
     </form>
+
+    <!-- Botón anclado funcional -->
+    <button type="submit" form="editarForm" class="btn-anclado">Guardar Cambios</button>
+
+    <script>
+        // Inicializar estado de edad manual
+        function initEdad() {
+            const fechaInput = document.getElementById('fecha_nac');
+            const edadInput = document.getElementById('edad_manual');
+            const usarManual = !fechaInput.value;
+            document.getElementById('usar_edad_manual').checked = usarManual;
+            if (usarManual) {
+                fechaInput.disabled = true;
+                edadInput.disabled = false;
+            } else {
+                fechaInput.disabled = false;
+                edadInput.disabled = true;
+            }
+        }
+
+        function toggleEdad() {
+            const usarManual = document.getElementById('usar_edad_manual').checked;
+            const fechaInput = document.getElementById('fecha_nac');
+            const edadInput = document.getElementById('edad_manual');
+            
+            if (usarManual) {
+                fechaInput.removeAttribute('required');
+                fechaInput.disabled = true;
+                edadInput.disabled = false;
+                edadInput.setAttribute('required', 'required');
+            } else {
+                fechaInput.setAttribute('required', 'required');
+                fechaInput.disabled = false;
+                edadInput.disabled = true;
+                edadInput.removeAttribute('required');
+            }
+        }
+
+        function buscarPruebas() {
+            const input = document.getElementById('buscador');
+            const filter = input.value.toLowerCase();
+            const pruebas = document.getElementsByClassName('prueba-item');
+
+            for (let i = 0; i < pruebas.length; i++) {
+                const nombre = pruebas[i].getAttribute('data-nombre');
+                const clave = pruebas[i].getAttribute('data-clave');
+                if (nombre.includes(filter) || clave.includes(filter)) {
+                    pruebas[i].classList.add('mostrar');
+                } else {
+                    pruebas[i].classList.remove('mostrar');
+                }
+            }
+            actualizarSeleccionados();
+        }
+
+        function actualizarSeleccionados() {
+            const checkboxes = document.querySelectorAll('input[name="nuevos_estudios"]:checked');
+            const lista = document.getElementById('lista-seleccionados');
+            const ninguno = document.getElementById('ninguno');
+            lista.innerHTML = '';
+
+            if (checkboxes.length === 0) {
+                lista.appendChild(ninguno);
+                return;
+            }
+
+            ninguno.remove();
+            checkboxes.forEach(checkbox => {
+                const label = document.querySelector(`label[for="${checkbox.id}"]`).innerText;
+                const laboratorio = document.querySelector(`#lab_nuevo_${checkbox.value}`).value;
+                const labText = laboratorio === 'matriz' ? 'Matriz' : 'SIGMA';
+                const li = document.createElement('li');
+                li.textContent = `${label} (${labText})`;
+                lista.appendChild(li);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initEdad();
+            setTimeout(() => {
+                const allPruebas = document.querySelectorAll('.prueba-item');
+                allPruebas.forEach(el => el.classList.add('mostrar'));
+            }, 100);
+            actualizarSeleccionados();
+        });
+    </script>
 </body>
 </html>

@@ -144,8 +144,20 @@
     <script>
         function toggleEdad() {
             const usarManual = document.getElementById('usar_edad_manual').checked;
-            document.getElementById('fecha_nac').disabled = usarManual;
-            document.getElementById('edad_manual').disabled = !usarManual;
+            const fechaInput = document.getElementById('fecha_nac');
+            const edadInput = document.getElementById('edad_manual');
+            
+            if (usarManual) {
+                fechaInput.removeAttribute('required');
+                fechaInput.disabled = true;
+                edadInput.disabled = false;
+                edadInput.setAttribute('required', 'required');
+            } else {
+                fechaInput.setAttribute('required', 'required');
+                fechaInput.disabled = false;
+                edadInput.disabled = true;
+                edadInput.removeAttribute('required');
+            }
         }
 
         function buscarPruebas() {
