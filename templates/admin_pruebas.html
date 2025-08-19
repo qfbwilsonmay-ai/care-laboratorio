@@ -9,6 +9,10 @@
         input, select { width: 100%; padding: 8px; margin: 5px 0; }
         button { padding: 8px 12px; margin: 2px; cursor: pointer; }
         .btn-guardar { background: #28a745; color: white; border: none; }
+        .btn-editar { background: #007bff; color: white; border: none; }
+        .btn-validar { background: #ffc107; color: black; border: none; }
+        .fila-validada { background-color: #d4edda; } /* Verde claro */
+        .fila-normal { background-color: white; }
         .buscador {
             font-size: 1.1em;
             padding: 10px;
@@ -43,7 +47,7 @@
 
     <button type="button" class="btn-agregar" onclick="agregarFila()">➕ Agregar Nueva Prueba</button>
 
-    <form method="POST">
+    <form method="POST" id="formPruebas">
         <table id="tablaPruebas">
             <tr>
                 <th>Clave</th>
@@ -51,22 +55,40 @@
                 <th>Tipo de Muestra</th>
                 <th>Contenedor</th>
                 <th>Unidad / Valores Normales</th>
+                <th>Acciones</th>
             </tr>
             {% for p in pruebas %}
-            <tr data-nombre="{{ p.nombre|lower }}" data-clave="{{ p.clave|lower }}">
-                <td><input type="text" name="clave_{{ loop.index }}" value="{{ p.clave }}" required></td>
-                <td><input type="text" name="nombre_{{ loop.index }}" value="{{ p.nombre }}" required></td>
-                <td><input type="text" name="tipo_muestra_{{ loop.index }}" value="{{ p.tipo_muestra }}" required></td>
+            {% set validado = p.get('validado', false) %}
+            {% set clase_fila = "fila-validada" if validado else "fila-normal" %}
+
+            <tr class="{{ clase_fila }}" id="fila_{{ loop.index }}">
                 <td>
-                    <select name="id_contenedor_{{ loop.index }}">
+                    <input type="text" name="clave_{{ loop.index }}" value="{{ p.clave }}" required {{ 'readonly' if validado else '' }}>
+                </td>
+                <td>
+                    <input type="text" name="nombre_{{ loop.index }}" value="{{ p.nombre }}" required {{ 'readonly' if validado else '' }}>
+                </td>
+                <td>
+                    <input type="text" name="tipo_muestra_{{ loop.index }}" value="{{ p.tipo_muestra }}" required {{ 'readonly' if validado else '' }}>
+                </td>
+                <td>
+                    <select name="id_contenedor_{{ loop.index }}" {{ 'disabled' if validado else '' }}>
                         {% for cont in contenedores %}
                         <option value="{{ cont.id }}" {% if cont.id == p.id_contenedor %}selected{% endif %}>{{ cont.nombre }}</option>
                         {% endfor %}
                     </select>
                 </td>
                 <td>
-                    <input type="text" name="unidad_{{ loop.index }}" value="{{ p.unidad }}" placeholder="Unidad" required>
-                    <input type="text" name="valores_normales_{{ loop.index }}" value="{{ p.valores_normales }}" placeholder="Valores normales" required>
+                    <input type="text" name="unidad_{{ loop.index }}" value="{{ p.unidad }}" placeholder="Unidad" {{ 'readonly' if validado else '' }}>
+                    <input type="text" name="valores_normales_{{ loop.index }}" value="{{ p.valores_normales }}" placeholder="Valores normales" {{ 'readonly' if validado else '' }}>
+                </td>
+                <td>
+                    <input type="hidden" name="validado_{{ loop.index }}" id="validado_{{ loop.index }}" value="{{ '1' if validado else '0' }}">
+                    {% if validado %}
+                        <button type="button" class="btn-editar" onclick="editarFila({{ loop.index }})">Editar</button>
+                    {% else %}
+                        <button type="button" class="btn-validar" onclick="validarFila({{ loop.index }})">Validar</button>
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}
@@ -80,11 +102,10 @@
         function buscarPruebas() {
             const input = document.getElementById('buscador');
             const filter = input.value.toLowerCase();
-            const filas = document.querySelectorAll('#tablaPruebas tr[data-nombre]');
+            const filas = document.querySelectorAll('#tablaPruebas tr[id^="fila_"]');
             filas.forEach(fila => {
-                const nombre = fila.getAttribute('data-nombre');
-                const clave = fila.getAttribute('data-clave');
-                if (nombre.includes(filter) || clave.includes(filter)) {
+                const texto = fila.textContent.toLowerCase();
+                if (texto.includes(filter)) {
                     fila.style.display = '';
                 } else {
                     fila.style.display = 'none';
@@ -92,32 +113,68 @@
             });
         }
 
-        function agregarFila() {
-    const tabla = document.getElementById('tablaPruebas');
-    const filas = tabla.querySelectorAll('tr').length;
-    const idx = filas; // El siguiente índice
+        function validarFila(idx) {
+            const inputs = document.querySelectorAll(`#fila_${idx} input`);
+            const selects = document.querySelectorAll(`#fila_${idx} select`);
+            inputs.forEach(input => {
+                if (input.name.startsWith('validado_')) return;
+                input.setAttribute('readonly', 'readonly');
+            });
+            selects.forEach(select => {
+                select.setAttribute('disabled', 'disabled');
+            });
+            document.getElementById(`fila_${idx}`).classList.add('fila-validada');
+            document.getElementById(`validado_${idx}`).value = '1';
+            document.querySelector(`#fila_${idx} td:last-child`).innerHTML = 
+                `<button type="button" class="btn-editar" onclick="editarFila(${idx})">Editar</button>`;
+        }
 
-    const nuevaFila = document.createElement('tr');
-    nuevaFila.setAttribute('data-nombre', '');
-    nuevaFila.setAttribute('data-clave', '');
-    nuevaFila.innerHTML = `
-        <td><input type="text" name="clave_${idx}" placeholder="Clave" required></td>
-        <td><input type="text" name="nombre_${idx}" placeholder="Nombre" required></td>
-        <td><input type="text" name="tipo_muestra_${idx}" placeholder="Tipo de muestra" required></td>
-        <td>
-            <select name="id_contenedor_${idx}">
-                {% for cont in contenedores %}
-                <option value="{{ cont.id }}">{{ cont.nombre }}</option>
-                {% endfor %}
-            </select>
-        </td>
-        <td>
-            <input type="text" name="unidad_${idx}" placeholder="Unidad" required>
-            <input type="text" name="valores_normales_${idx}" placeholder="Valores normales" required>
-        </td>
-    `;
-    tabla.appendChild(nuevaFila);
-}
+        function editarFila(idx) {
+            const inputs = document.querySelectorAll(`#fila_${idx} input`);
+            const selects = document.querySelectorAll(`#fila_${idx} select`);
+            inputs.forEach(input => {
+                if (input.name.startsWith('validado_')) return;
+                input.removeAttribute('readonly');
+            });
+            selects.forEach(select => {
+                select.removeAttribute('disabled');
+            });
+            document.getElementById(`fila_${idx}`).classList.remove('fila-validada');
+            document.getElementById(`validado_${idx}`).value = '0';
+            document.querySelector(`#fila_${idx} td:last-child`).innerHTML = 
+                `<button type="button" class="btn-validar" onclick="validarFila(${idx})">Validar</button>`;
+        }
+
+        function agregarFila() {
+            const tabla = document.getElementById('tablaPruebas');
+            const filas = tabla.querySelectorAll('tr').length;
+            const idx = filas; // Siguiente índice
+
+            const nuevaFila = document.createElement('tr');
+            nuevaFila.id = `fila_${idx}`;
+            nuevaFila.className = 'fila-normal';
+            nuevaFila.innerHTML = `
+                <td><input type="text" name="clave_${idx}" placeholder="Clave" required></td>
+                <td><input type="text" name="nombre_${idx}" placeholder="Nombre" required></td>
+                <td><input type="text" name="tipo_muestra_${idx}" placeholder="Tipo de muestra" required></td>
+                <td>
+                    <select name="id_contenedor_${idx}">
+                        {% for cont in contenedores %}
+                        <option value="{{ cont.id }}">{{ cont.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td>
+                    <input type="text" name="unidad_${idx}" placeholder="Unidad">
+                    <input type="text" name="valores_normales_${idx}" placeholder="Valores normales">
+                </td>
+                <td>
+                    <input type="hidden" name="validado_${idx}" id="validado_${idx}" value="0">
+                    <button type="button" class="btn-validar" onclick="validarFila(${idx})">Validar</button>
+                </td>
+            `;
+            tabla.appendChild(nuevaFila);
+        }
 
         document.addEventListener('DOMContentLoaded', function() {
             buscarPruebas();
