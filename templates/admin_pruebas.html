@@ -93,26 +93,31 @@
         }
 
         function agregarFila() {
-            const tabla = document.getElementById('tablaPruebas');
-            const nuevaFila = document.createElement('tr');
-            nuevaFila.innerHTML = `
-                <td><input type="text" name="clave_nueva" placeholder="Clave" required></td>
-                <td><input type="text" name="nombre_nueva" placeholder="Nombre" required></td>
-                <td><input type="text" name="tipo_muestra_nueva" placeholder="Tipo de muestra" required></td>
-                <td>
-                    <select name="id_contenedor_nueva">
-                        {% for cont in contenedores %}
-                        <option value="{{ cont.id }}">{{ cont.nombre }}</option>
-                        {% endfor %}
-                    </select>
-                </td>
-                <td>
-                    <input type="text" name="unidad_nueva" placeholder="Unidad" required>
-                    <input type="text" name="valores_normales_nueva" placeholder="Valores normales" required>
-                </td>
-            `;
-            tabla.appendChild(nuevaFila);
-        }
+    const tabla = document.getElementById('tablaPruebas');
+    const filas = tabla.querySelectorAll('tr').length;
+    const idx = filas; // El siguiente índice
+
+    const nuevaFila = document.createElement('tr');
+    nuevaFila.setAttribute('data-nombre', '');
+    nuevaFila.setAttribute('data-clave', '');
+    nuevaFila.innerHTML = `
+        <td><input type="text" name="clave_${idx}" placeholder="Clave" required></td>
+        <td><input type="text" name="nombre_${idx}" placeholder="Nombre" required></td>
+        <td><input type="text" name="tipo_muestra_${idx}" placeholder="Tipo de muestra" required></td>
+        <td>
+            <select name="id_contenedor_${idx}">
+                {% for cont in contenedores %}
+                <option value="{{ cont.id }}">{{ cont.nombre }}</option>
+                {% endfor %}
+            </select>
+        </td>
+        <td>
+            <input type="text" name="unidad_${idx}" placeholder="Unidad" required>
+            <input type="text" name="valores_normales_${idx}" placeholder="Valores normales" required>
+        </td>
+    `;
+    tabla.appendChild(nuevaFila);
+}
 
         document.addEventListener('DOMContentLoaded', function() {
             buscarPruebas();
