@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Editar Paciente - CARE</title>
+    <title>Registrar Paciente - CARE</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         .container { display: flex; gap: 20px; }
@@ -68,25 +68,29 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
             z-index: 100;
         }
-        .estudio-asignado {
+        .resumen {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0f8ff;
             border: 1px solid #0066cc;
-            padding: 10px;
-            margin: 10px 0;
             border-radius: 5px;
-            background: #e6f7ff;
+            font-size: 0.95em;
+        }
+        .resumen div {
+            margin: 8px 0;
         }
     </style>
 </head>
 <body>
-    <h1>Editar Paciente: {{ paciente.nombre }}</h1>
-    <form method="POST" id="editarForm">
+    <h1>Registrar Paciente</h1>
+    <form method="POST" id="registroForm">
         <div class="container">
             <div class="left-column">
                 <label>Nombre completo:</label>
-                <input type="text" name="nombre" value="{{ paciente.nombre }}" required>
+                <input type="text" name="nombre" required>
 
                 <label>Fecha de nacimiento (AAAA-MM-DD):</label>
-                <input type="date" name="fecha_nac" value="{{ paciente.fecha_nacimiento }}" id="fecha_nac">
+                <input type="date" name="fecha_nac" id="fecha_nac">
 
                 <div>
                     <input type="checkbox" id="usar_edad_manual" onchange="toggleEdad()">
@@ -94,49 +98,42 @@
                 </div>
 
                 <label>Edad:</label>
-                <input type="number" name="edad_manual" id="edad_manual" {% if paciente.fecha_nacimiento %}disabled{% else %}value="{{ paciente.edad }}"{% endif %}>
+                <input type="number" name="edad_manual" id="edad_manual" disabled>
 
                 <label>Sexo:</label>
                 <select name="sexo" required>
-                    <option value="M" {% if paciente.sexo == "M" %}selected{% endif %}>Hombre</option>
-                    <option value="F" {% if paciente.sexo == "F" %}selected{% endif %}>Mujer</option>
-                    <option value="O" {% if paciente.sexo == "O" %}selected{% endif %}>Otro</option>
+                    <option value="M">Hombre</option>
+                    <option value="F">Mujer</option>
+                    <option value="O">Otro</option>
                 </select>
 
                 <label>Diagnóstico (opcional):</label>
-                <input type="text" name="diagnostico" value="{{ paciente.diagnostico }}" required>
+                <input type="text" name="diagnostico">
 
                 <label>Médico solicitante:</label>
-                <input type="text" name="medico" value="{{ paciente.medico }}" required>
+                <input type="text" name="medico" required>
 
-                <h3>Estudios ya asignados</h3>
-                {% for estudio in estudios_asignados %}
-                <div class="estudio-asignado">
-                    {{ estudio.nombre }} - ${{ estudio.precio }}
-                    <input type="checkbox" name="eliminar_{{ estudio.clave }}" id="eliminar_{{ estudio.clave }}">
-                    <label for="eliminar_{{ estudio.clave }}">Eliminar</label>
-                </div>
-                {% endfor %}
-
-                <h3>Agregar nuevos estudios</h3>
+                <h3>Buscar estudios a realizar</h3>
                 <input type="text" id="buscador" class="buscador" placeholder="Escribe para buscar pruebas..." onkeyup="buscarPruebas()">
 
                 <div id="lista-pruebas">
                     {% for p in pruebas %}
                     <div class="prueba-item" data-nombre="{{ p.nombre|lower }}" data-clave="{{ p.clave|lower }}">
-                        <input type="checkbox" name="nuevos_estudios" value="{{ p.clave }}" id="nuevo_{{ p.clave }}" onchange="actualizarSeleccionados()">
-                        <label for="nuevo_{{ p.clave }}"><strong>{{ p.nombre }}</strong></label>
+                        <input type="checkbox" name="pruebas" value="{{ p.clave }}" id="prueba_{{ p.clave }}" onchange="actualizarSeleccionados()">
+                        <label for="prueba_{{ p.clave }}"><strong>{{ p.nombre }}</strong></label>
                         
                         <div style="margin-left: 20px; font-size: 0.9em;">
                             <label>Procesar en:</label>
-                            <select name="laboratorio_nuevo_{{ p.clave }}" id="lab_nuevo_{{ p.clave }}" onchange="actualizarSeleccionados()">
+                            <select name="laboratorio_{{ p.clave }}" id="lab_{{ p.clave }}" onchange="actualizarPrecio('{{ p.clave }}')">
                                 <option value="matriz">Matriz (CARE)</option>
                                 <option value="sigma">SIGMA (maquila)</option>
                             </select>
                         </div>
                         
                         <div style="margin-left: 20px; color: #666;" class="info">
-                            Precio: ${{ precios_dict.get('prueba_' + p.clave, {}).get('precio_publico_matriz', 0) }}
+                            <span id="precio_{{ p.clave }}">
+                                Precio: ${{ precios_dict.get('prueba_' + p.clave, {}).get('precio_publico_matriz', 0) }}
+                            </span>
                         </div>
                     </div>
                     {% endfor %}
@@ -146,11 +143,14 @@
             <div class="right-column">
                 <h4>Estudios seleccionados</h4>
                 <ul id="lista-seleccionados">
-                    {% for estudio in estudios_asignados %}
-                    <li>{{ estudio.nombre }}</li>
-                    {% endfor %}
-                    <li id="ninguno" style="display: none;">(Ninguno aún)</li>
+                    <li>(Ninguno aún)</li>
                 </ul>
+
+                <div class="resumen">
+                    <div><strong>Subtotal:</strong> $<span id="subtotal">0</span></div>
+                    <div>IVA (16%): $<span id="iva">0</span></div>
+                    <div><strong>Total:</strong> $<span id="total">0</span></div>
+                </div>
             </div>
         </div>
 
@@ -158,40 +158,13 @@
     </form>
 
     <!-- Botón anclado funcional -->
-    <button type="submit" form="editarForm" class="btn-anclado">Guardar Cambios</button>
+    <button type="submit" form="registroForm" class="btn-anclado">Registrar Paciente</button>
 
     <script>
-        // Inicializar estado de edad manual
-        function initEdad() {
-            const fechaInput = document.getElementById('fecha_nac');
-            const edadInput = document.getElementById('edad_manual');
-            const usarManual = !fechaInput.value;
-            document.getElementById('usar_edad_manual').checked = usarManual;
-            if (usarManual) {
-                fechaInput.disabled = true;
-                edadInput.disabled = false;
-            } else {
-                fechaInput.disabled = false;
-                edadInput.disabled = true;
-            }
-        }
-
         function toggleEdad() {
             const usarManual = document.getElementById('usar_edad_manual').checked;
-            const fechaInput = document.getElementById('fecha_nac');
-            const edadInput = document.getElementById('edad_manual');
-            
-            if (usarManual) {
-                fechaInput.removeAttribute('required');
-                fechaInput.disabled = true;
-                edadInput.disabled = false;
-                edadInput.setAttribute('required', 'required');
-            } else {
-                fechaInput.setAttribute('required', 'required');
-                fechaInput.disabled = false;
-                edadInput.disabled = true;
-                edadInput.removeAttribute('required');
-            }
+            document.getElementById('fecha_nac').disabled = usarManual;
+            document.getElementById('edad_manual').disabled = !usarManual;
         }
 
         function buscarPruebas() {
@@ -211,30 +184,60 @@
             actualizarSeleccionados();
         }
 
+        // Precios desde el backend (inyectados en JSON)
+        const preciosData = {
+            {% for p in pruebas %}
+            "{{ p.clave }}": {
+                matriz: {{ precios_dict.get('prueba_' + p.clave, {}).get('precio_publico_matriz', 0) }},
+                sigma: {{ precios_dict.get('prueba_' + p.clave, {}).get('precio_publico_sigma', 0) }}
+            },
+            {% endfor %}
+        };
+
+        function actualizarPrecio(clave) {
+            const laboratorio = document.getElementById(`lab_${clave}`).value;
+            const precio = preciosData[clave][laboratorio] || 0;
+            document.getElementById(`precio_${clave}`).innerHTML = `Precio: $${precio}`;
+            actualizarSeleccionados();
+        }
+
         function actualizarSeleccionados() {
-            const checkboxes = document.querySelectorAll('input[name="nuevos_estudios"]:checked');
+            const checkboxes = document.querySelectorAll('input[name="pruebas"]:checked');
             const lista = document.getElementById('lista-seleccionados');
-            const ninguno = document.getElementById('ninguno');
-            lista.innerHTML = '';
+            let subtotal = 0;
 
             if (checkboxes.length === 0) {
-                lista.appendChild(ninguno);
+                lista.innerHTML = '<li>(Ninguno aún)</li>';
+                document.getElementById('subtotal').textContent = '0';
+                document.getElementById('iva').textContent = '0';
+                document.getElementById('total').textContent = '0';
                 return;
             }
 
-            ninguno.remove();
+            lista.innerHTML = '';
+
             checkboxes.forEach(checkbox => {
+                const clave = checkbox.value;
                 const label = document.querySelector(`label[for="${checkbox.id}"]`).innerText;
-                const laboratorio = document.querySelector(`#lab_nuevo_${checkbox.value}`).value;
+                const laboratorio = document.querySelector(`#lab_${clave}`).value;
+                const precio = preciosData[clave][laboratorio] || 0;
+                subtotal += precio;
+
                 const labText = laboratorio === 'matriz' ? 'Matriz' : 'SIGMA';
                 const li = document.createElement('li');
-                li.textContent = `${label} (${labText})`;
+                li.textContent = `${label} (${labText}) - $${precio}`;
                 lista.appendChild(li);
             });
+
+            const iva = subtotal * 0.16;
+            const total = subtotal + iva;
+
+            document.getElementById('subtotal').textContent = subtotal.toFixed(2);
+            document.getElementById('iva').textContent = iva.toFixed(2);
+            document.getElementById('total').textContent = total.toFixed(2);
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            initEdad();
             setTimeout(() => {
                 const allPruebas = document.querySelectorAll('.prueba-item');
                 allPruebas.forEach(el => el.classList.add('mostrar'));

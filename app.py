@@ -113,6 +113,8 @@ def resumen(folio):
     subtotal = 0
     maquila_matriz = 0
     maquila_sigma = 0
+    materiales = 0
+    envio = 0
 
     for estudio in paciente.get('estudios', []):
         clave = estudio['clave']
@@ -120,32 +122,38 @@ def resumen(folio):
         
         # Precio público
         precio_data = precios_dict.get(f"prueba_{clave}")
-        if precio_data:
+        if precio_
             if procesado_en == 'sigma':
                 precio_publico = precio_data.get('precio_publico_sigma', 0)
             else:
                 precio_publico = precio_data.get('precio_publico_matriz', 0)
             subtotal += precio_publico
 
-        # Costo de maquila
-        costo_matriz = precio_data.get('costos', {}).get('matriz', {})
-        costo_sigma = precio_data.get('costos', {}).get('sigma', {})
-        
-        maquila_matriz += costo_matriz.get('maquila', 0) + costo_matriz.get('materiales', 0) + costo_matriz.get('envio', 0)
-        maquila_sigma += costo_sigma.get('maquila', 0) + costo_sigma.get('materiales', 0) + costo_sigma.get('envio', 0)
+        # Costos detallados
+        costo_matriz = precio_data.get('costos', {}).get('matriz', {}) if precio_data else {}
+        costo_sigma = precio_data.get('costos', {}).get('sigma', {}) if precio_data else {}
 
+        maquila_matriz += costo_matriz.get('maquila', 0)
+        maquila_sigma += costo_sigma.get('maquila', 0)
+        materiales += costo_matriz.get('materiales', 0) + costo_sigma.get('materiales', 0)
+        envio += costo_matriz.get('envio', 0) + costo_sigma.get('envio', 0)
+
+    total_maquila = maquila_matriz + maquila_sigma
+    ganancia = subtotal - (total_maquila + materiales + envio)
     iva = round(subtotal * 0.16, 2)
     total = subtotal + iva
-    ganancia = total - (maquila_matriz + maquila_sigma)
 
     return render_template(
         'resumen.html',
         paciente=paciente,
-        subtotal=subtotal,
-        iva=iva,
-        total=total,
+        subtotal=round(subtotal, 2),
+        iva=round(iva, 2),
+        total=round(total, 2),
         maquila_matriz=round(maquila_matriz, 2),
         maquila_sigma=round(maquila_sigma, 2),
+        total_maquila=round(total_maquila, 2),
+        materiales=round(materiales, 2),
+        envio=round(envio, 2),
         ganancia=round(ganancia, 2)
     )
 

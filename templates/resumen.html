@@ -6,7 +6,7 @@
         body { font-family: Arial, sans-serif; margin: 20px; }
         h1, h2 { color: #0066cc; }
         .contenedor {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
             padding: 20px;
             border: 1px solid #ddd;
@@ -31,22 +31,19 @@
             font-weight: bold;
             font-size: 1.1em;
         }
-        .form-descuento {
+        .desglose {
             margin: 20px 0;
             padding: 15px;
-            background: #e6f7ff;
+            background: #f0f8ff;
             border: 1px solid #0066cc;
             border-radius: 5px;
+            font-size: 0.95em;
         }
-        input, button {
-            padding: 8px;
-            margin: 5px 0;
+        .desglose div {
+            margin: 8px 0;
         }
         .btn {
-            background: #0066cc; color: white; border: none; padding: 10px 15px; cursor: pointer;
-        }
-        .btn:disabled {
-            background: #ccc; cursor: not-allowed;
+            background: #0066cc; color: white; border: none; padding: 10px 15px; cursor: pointer; text-decoration: none;
         }
     </style>
 </head>
@@ -72,60 +69,23 @@
             {% endfor %}
         </table>
 
+        <div class="desglose">
+            <h3>Desglose de Costos</h3>
+            <div><strong>Costo Maquila Matriz:</strong> $<span id="maquila_matriz">{{ maquila_matriz }}</span></div>
+            <div><strong>Costo Maquila SIGMA:</strong> $<span id="maquila_sigma">{{ maquila_sigma }}</span></div>
+            <div><strong>Costo Total de Maquila:</strong> $<span id="total_maquila">{{ total_maquila }}</span></div>
+            <div><strong>Materiales:</strong> $<span id="materiales">{{ materiales }}</span></div>
+            <div><strong>Envío:</strong> $<span id="envio">{{ envio }}</span></div>
+            <div><strong>Ganancia Neta:</strong> $<span id="ganancia">{{ ganancia }}</span></div>
+        </div>
+
         <div class="totales">
-            <p><strong>Subtotal:</strong> $<span id="subtotal">{{ subtotal }}</span></p>
-            <p><strong>IVA (16%):</strong> $<span id="iva">{{ iva }}</span></p>
-            <p class="total"><strong>Total:</strong> $<span id="total">{{ total }}</span></p>
-        </div>
-
-        <div class="costos">
-            <h3>Costos de Maquila</h3>
-            <p>Maquila Matriz: $<span id="maquila_matriz">{{ maquila_matriz }}</span></p>
-            <p>Maquila SIGMA (maquila): $<span id="maquila_sigma">{{ maquila_sigma }}</span></p>
-            <p><strong>Ganancia Neta:</strong> $<span id="ganancia">{{ ganancia }}</span></p>
-        </div>
-
-        <div class="form-descuento">
-            <h3>Aplicar Descuento</h3>
-            <input type="number" id="descuento" min="0" max="100" placeholder="Porcentaje de descuento">
-            <button onclick="aplicarDescuento()">Aplicar Descuento</button>
-            <button onclick="location.reload()">Restablecer</button>
-            <p id="mensaje-descuento" style="color: #d9534f;"></p>
+            <div><strong>Subtotal (maquila + materiales + envío + ganancia):</strong> $<span id="subtotal">{{ subtotal }}</span></div>
+            <div><strong>IVA (16%):</strong> $<span id="iva">{{ iva }}</span></div>
+            <div class="total"><strong>Total a Pagar:</strong> $<span id="total">{{ total }}</span></div>
         </div>
 
         <a href="/" class="btn">← Inicio</a>
     </div>
-
-    <script>
-        // Datos iniciales
-        let subtotalBase = parseFloat("{{ subtotal }}");
-        let ivaBase = parseFloat("{{ iva }}");
-        let totalBase = parseFloat("{{ total }}");
-        let maquilaMatriz = parseFloat("{{ maquila_matriz }}");
-        let maquilaSigma = parseFloat("{{ maquila_sigma }}");
-
-        function aplicarDescuento() {
-            const porcentaje = parseFloat(document.getElementById('descuento').value) || 0;
-            if (porcentaje < 0 || porcentaje > 100) {
-                document.getElementById('mensaje-descuento').textContent = "El porcentaje debe estar entre 0 y 100.";
-                return;
-            }
-
-            const descuento = totalBase * (porcentaje / 100);
-            const totalConDescuento = totalBase - descuento;
-            const ivaConDescuento = totalConDescuento * 0.16;
-            const subtotalConDescuento = totalConDescuento - ivaConDescuento;
-
-            document.getElementById('subtotal').textContent = subtotalConDescuento.toFixed(2);
-            document.getElementById('iva').textContent = ivaConDescuento.toFixed(2);
-            document.getElementById('total').textContent = totalConDescuento.toFixed(2);
-
-            const ganancia = totalConDescuento - (maquilaMatriz + maquilaSigma);
-            document.getElementById('ganancia').textContent = ganancia.toFixed(2);
-
-            document.getElementById('mensaje-descuento').textContent = 
-                `Descuento del ${porcentaje}% aplicado. Total final: $${totalConDescuento.toFixed(2)}`;
-        }
-    </script>
 </body>
 </html>
