@@ -99,6 +99,56 @@ def registro():
         precios_dict=precios_dict
     )
 
+@app.route('/resumen/<folio>')
+def resumen(folio):
+    pacientes = cargar_datos(RUTA_PACIENTES)
+    paciente = next((p for p in pacientes if p['folio'] == folio), None)
+
+    if not paciente:
+        return "Paciente no encontrado", 404
+
+    # Cargar precios
+    _, _, _, precios_dict = cargar_catalogos()
+
+    subtotal = 0
+    maquila_matriz = 0
+    maquila_sigma = 0
+
+    for estudio in paciente.get('estudios', []):
+        clave = estudio['clave']
+        procesado_en = estudio.get('procesado_en', 'matriz')
+        
+        # Precio público
+        precio_data = precios_dict.get(f"prueba_{clave}")
+        if precio_data:
+            if procesado_en == 'sigma':
+                precio_publico = precio_data.get('precio_publico_sigma', 0)
+            else:
+                precio_publico = precio_data.get('precio_publico_matriz', 0)
+            subtotal += precio_publico
+
+        # Costo de maquila
+        costo_matriz = precio_data.get('costos', {}).get('matriz', {})
+        costo_sigma = precio_data.get('costos', {}).get('sigma', {})
+        
+        maquila_matriz += costo_matriz.get('maquila', 0) + costo_matriz.get('materiales', 0) + costo_matriz.get('envio', 0)
+        maquila_sigma += costo_sigma.get('maquila', 0) + costo_sigma.get('materiales', 0) + costo_sigma.get('envio', 0)
+
+    iva = round(subtotal * 0.16, 2)
+    total = subtotal + iva
+    ganancia = total - (maquila_matriz + maquila_sigma)
+
+    return render_template(
+        'resumen.html',
+        paciente=paciente,
+        subtotal=subtotal,
+        iva=iva,
+        total=total,
+        maquila_matriz=round(maquila_matriz, 2),
+        maquila_sigma=round(maquila_sigma, 2),
+        ganancia=round(ganancia, 2)
+    )
+
 @app.route('/admin/pruebas', methods=['GET', 'POST'])
 def admin_pruebas():
     if request.method == 'POST':
@@ -130,7 +180,7 @@ def admin_pruebas():
 
 @app.route('/admin/precios', methods=['GET', 'POST'])
 def admin_precios():
-    if request.method == 'POST':
+    if request.method == 'POST'>
         nuevos_precios = []
         for key in request.form:
             if key.startswith('tipo_'):
@@ -201,7 +251,7 @@ def resultados(folio):
     claves_solicitadas = [e['clave'] for e in paciente.get('estudios', [])]
     pruebas_solicitadas = [p for p in pruebas if p['clave'] in claves_solicitadas]
 
-    if request.method == 'POST':
+    if request.method == 'POST'>
         clave = request.form['prueba']
         resultado = request.form['resultado']
         prueba = next((p for p in pruebas if p['clave'] == clave), None)
@@ -239,7 +289,7 @@ def editar_paciente(folio):
     if not paciente:
         return "Paciente no encontrado", 404
 
-    if request.method == 'POST':
+    if request.method == 'POST'>
         paciente['nombre'] = request.form['nombre']
         paciente['fecha_nacimiento'] = request.form['fecha_nac']
         paciente['sexo'] = request.form['sexo']
