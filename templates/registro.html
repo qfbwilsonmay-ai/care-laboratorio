@@ -68,6 +68,17 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
             z-index: 100;
         }
+        .resumen {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0f8ff;
+            border: 1px solid #0066cc;
+            border-radius: 5px;
+            font-size: 0.95em;
+        }
+        .resumen div {
+            margin: 8px 0;
+        }
     </style>
 </head>
 <body>
@@ -113,14 +124,16 @@
                         
                         <div style="margin-left: 20px; font-size: 0.9em;">
                             <label>Procesar en:</label>
-                            <select name="laboratorio_{{ p.clave }}" id="lab_{{ p.clave }}" onchange="actualizarSeleccionados()">
-                                <option value="matriz" {% if p.procesado_en == "matriz" %}selected{% endif %}>Matriz (CARE)</option>
-                                <option value="sigma" {% if p.procesado_en == "sigma" %}selected{% endif %}>SIGMA (maquila)</option>
+                            <select name="laboratorio_{{ p.clave }}" id="lab_{{ p.clave }}" onchange="actualizarPrecio('{{ p.clave }}')">
+                                <option value="matriz">Matriz (CARE)</option>
+                                <option value="sigma">SIGMA (maquila)</option>
                             </select>
                         </div>
                         
                         <div style="margin-left: 20px; color: #666;" class="info">
-                            Precio: ${{ precios_dict.get('prueba_' + p.clave, {}).get('precio_publico_matriz', 0) }}
+                            <span id="precio_{{ p.clave }}">
+                                Precio: ${{ precios_dict.get('prueba_' + p.clave, {}).get('precio_publico_matriz', 0) }}
+                            </span>
                         </div>
                     </div>
                     {% endfor %}
@@ -132,6 +145,12 @@
                 <ul id="lista-seleccionados">
                     <li>(Ninguno aún)</li>
                 </ul>
+
+                <div class="resumen">
+                    <div><strong>Subtotal:</strong> $<span id="subtotal">0</span></div>
+                    <div>IVA (16%): $<span id="iva">0</span></div>
+                    <div><strong>Total:</strong> $<span id="total">0</span></div>
+                </div>
             </div>
         </div>
 
@@ -144,20 +163,8 @@
     <script>
         function toggleEdad() {
             const usarManual = document.getElementById('usar_edad_manual').checked;
-            const fechaInput = document.getElementById('fecha_nac');
-            const edadInput = document.getElementById('edad_manual');
-            
-            if (usarManual) {
-                fechaInput.removeAttribute('required');
-                fechaInput.disabled = true;
-                edadInput.disabled = false;
-                edadInput.setAttribute('required', 'required');
-            } else {
-                fechaInput.setAttribute('required', 'required');
-                fechaInput.disabled = false;
-                edadInput.disabled = true;
-                edadInput.removeAttribute('required');
-            }
+            document.getElementById('fecha_nac').disabled = usarManual;
+            document.getElementById('edad_manual').disabled = !usarManual;
         }
 
         function buscarPruebas() {
@@ -177,24 +184,57 @@
             actualizarSeleccionados();
         }
 
+        // Precios desde el backend (inyectados en JSON)
+        const preciosData = {
+            {% for p in pruebas %}
+            "{{ p.clave }}": {
+                matriz: {{ precios_dict.get('prueba_' + p.clave, {}).get('precio_publico_matriz', 0) }},
+                sigma: {{ precios_dict.get('prueba_' + p.clave, {}).get('precio_publico_sigma', 0) }}
+            },
+            {% endfor %}
+        };
+
+        function actualizarPrecio(clave) {
+            const laboratorio = document.getElementById(`lab_${clave}`).value;
+            const precio = preciosData[clave][laboratorio] || 0;
+            document.getElementById(`precio_${clave}`).innerHTML = `Precio: $${precio}`;
+            actualizarSeleccionados();
+        }
+
         function actualizarSeleccionados() {
             const checkboxes = document.querySelectorAll('input[name="pruebas"]:checked');
             const lista = document.getElementById('lista-seleccionados');
-            lista.innerHTML = '';
+            let subtotal = 0;
 
             if (checkboxes.length === 0) {
                 lista.innerHTML = '<li>(Ninguno aún)</li>';
+                document.getElementById('subtotal').textContent = '0';
+                document.getElementById('iva').textContent = '0';
+                document.getElementById('total').textContent = '0';
                 return;
             }
 
+            lista.innerHTML = '';
+
             checkboxes.forEach(checkbox => {
+                const clave = checkbox.value;
                 const label = document.querySelector(`label[for="${checkbox.id}"]`).innerText;
-                const laboratorio = document.querySelector(`#lab_${checkbox.value}`).value;
+                const laboratorio = document.querySelector(`#lab_${clave}`).value;
+                const precio = preciosData[clave][laboratorio] || 0;
+                subtotal += precio;
+
                 const labText = laboratorio === 'matriz' ? 'Matriz' : 'SIGMA';
                 const li = document.createElement('li');
-                li.textContent = `${label} (${labText})`;
+                li.textContent = `${label} (${labText}) - $${precio}`;
                 lista.appendChild(li);
             });
+
+            const iva = subtotal * 0.16;
+            const total = subtotal + iva;
+
+            document.getElementById('subtotal').textContent = subtotal.toFixed(2);
+            document.getElementById('iva').textContent = iva.toFixed(2);
+            document.getElementById('total').textContent = total.toFixed(2);
         }
 
         document.addEventListener('DOMContentLoaded', function() {
