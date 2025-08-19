@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Resumen Económico - CARE</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1, h2 { color: #0066cc; }
+        .contenedor {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: left;
+        }
+        th {
+            background: #0066cc;
+            color: white;
+        }
+        .total {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        .form-descuento {
+            margin: 20px 0;
+            padding: 15px;
+            background: #e6f7ff;
+            border: 1px solid #0066cc;
+            border-radius: 5px;
+        }
+        input, button {
+            padding: 8px;
+            margin: 5px 0;
+        }
+        .btn {
+            background: #0066cc; color: white; border: none; padding: 10px 15px; cursor: pointer;
+        }
+        .btn:disabled {
+            background: #ccc; cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="contenedor">
+        <h1>Resumen Económico</h1>
+        <h2>{{ paciente.nombre }} (Folio: {{ paciente.folio }})</h2>
+
+        <table id="tabla-estudios">
+            <tr>
+                <th>Clave</th>
+                <th>Nombre</th>
+                <th>Procesado en</th>
+                <th>Precio Público</th>
+            </tr>
+            {% for estudio in paciente.estudios %}
+            <tr>
+                <td>{{ estudio.clave }}</td>
+                <td>{{ estudio.nombre }}</td>
+                <td>{{ estudio.procesado_en|upper }}</td>
+                <td>$ {{ estudio.precio }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        <div class="totales">
+            <p><strong>Subtotal:</strong> $<span id="subtotal">{{ subtotal }}</span></p>
+            <p><strong>IVA (16%):</strong> $<span id="iva">{{ iva }}</span></p>
+            <p class="total"><strong>Total:</strong> $<span id="total">{{ total }}</span></p>
+        </div>
+
+        <div class="costos">
+            <h3>Costos de Maquila</h3>
+            <p>Maquila Matriz: $<span id="maquila_matriz">{{ maquila_matriz }}</span></p>
+            <p>Maquila SIGMA (maquila): $<span id="maquila_sigma">{{ maquila_sigma }}</span></p>
+            <p><strong>Ganancia Neta:</strong> $<span id="ganancia">{{ ganancia }}</span></p>
+        </div>
+
+        <div class="form-descuento">
+            <h3>Aplicar Descuento</h3>
+            <input type="number" id="descuento" min="0" max="100" placeholder="Porcentaje de descuento">
+            <button onclick="aplicarDescuento()">Aplicar Descuento</button>
+            <button onclick="location.reload()">Restablecer</button>
+            <p id="mensaje-descuento" style="color: #d9534f;"></p>
+        </div>
+
+        <a href="/" class="btn">← Inicio</a>
+    </div>
+
+    <script>
+        // Datos iniciales
+        let subtotalBase = parseFloat("{{ subtotal }}");
+        let ivaBase = parseFloat("{{ iva }}");
+        let totalBase = parseFloat("{{ total }}");
+        let maquilaMatriz = parseFloat("{{ maquila_matriz }}");
+        let maquilaSigma = parseFloat("{{ maquila_sigma }}");
+
+        function aplicarDescuento() {
+            const porcentaje = parseFloat(document.getElementById('descuento').value) || 0;
+            if (porcentaje < 0 || porcentaje > 100) {
+                document.getElementById('mensaje-descuento').textContent = "El porcentaje debe estar entre 0 y 100.";
+                return;
+            }
+
+            const descuento = totalBase * (porcentaje / 100);
+            const totalConDescuento = totalBase - descuento;
+            const ivaConDescuento = totalConDescuento * 0.16;
+            const subtotalConDescuento = totalConDescuento - ivaConDescuento;
+
+            document.getElementById('subtotal').textContent = subtotalConDescuento.toFixed(2);
+            document.getElementById('iva').textContent = ivaConDescuento.toFixed(2);
+            document.getElementById('total').textContent = totalConDescuento.toFixed(2);
+
+            const ganancia = totalConDescuento - (maquilaMatriz + maquilaSigma);
+            document.getElementById('ganancia').textContent = ganancia.toFixed(2);
+
+            document.getElementById('mensaje-descuento').textContent = 
+                `Descuento del ${porcentaje}% aplicado. Total final: $${totalConDescuento.toFixed(2)}`;
+        }
+    </script>
+</body>
+</html>
