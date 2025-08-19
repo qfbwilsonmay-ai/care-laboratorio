@@ -4,28 +4,36 @@
     <title>Editar Paciente - CARE</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
-        form { max-width: 800px; }
+        form { max-width: 700px; }
         label { display: block; margin: 10px 0 5px; }
         input, select { width: 100%; padding: 8px; margin-bottom: 10px; }
         button { background: #0066cc; color: white; padding: 10px 20px; border: none; }
-        .btn { display: inline-block; padding: 8px 16px; text-decoration: none; margin: 5px 0; }
-        .btn-volver { background: #6c757d; }
-        .btn-danger { background: #d9534f; }
-        .seccion { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
-        .checkbox-list { margin: 15px 0; }
-        .checkbox-list div { display: flex; align-items: center; margin: 8px 0; }
-        .checkbox-list input[type="checkbox"] { margin-right: 10px; }
-        .flecha { color: #c00; font-weight: bold; }
+        .btn { background: #6c757d; color: white; padding: 8px 16px; text-decoration: none; margin: 5px 0; display: inline-block; }
+        .prueba-item {
+            border: 1px solid #ddd;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+        .info { font-size: 0.9em; color: #666; }
+        .estudio-asignado {
+            border: 1px solid #0066cc;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            background: #e6f7ff;
+        }
     </style>
 </head>
 <body>
-    <h1>Editar Paciente</h1>
+    <h1>Editar Paciente: {{ paciente.nombre }}</h1>
     <form method="POST">
         <label>Nombre completo:</label>
         <input type="text" name="nombre" value="{{ paciente.nombre }}" required>
 
         <label>Fecha de nacimiento (AAAA-MM-DD):</label>
-        <input type="date" name="fecha_nac" value="{{ paciente.fecha_nacimiento }}" required>
+        <input type="date" name="fecha_nac" value="{{ paciente.fecha_nacimiento }}">
 
         <label>Sexo:</label>
         <select name="sexo" required>
@@ -35,65 +43,44 @@
         </select>
 
         <label>Diagnóstico (opcional):</label>
-        <input type="text" name="diagnostico" value="{{ paciente.diagnostico }}">
+        <input type="text" name="diagnostico" value="{{ paciente.diagnostico }}" required>
 
         <label>Médico solicitante:</label>
         <input type="text" name="medico" value="{{ paciente.medico }}" required>
 
-        <!-- Añadir nuevos estudios -->
-        <div class="seccion">
-            <h3>Agregar más estudios</h3>
-            {% if pruebas %}
-            <div class="checkbox-list">
-                {% for p in pruebas %}
-                <div>
-                    <input 
-                        type="checkbox" 
-                        name="nuevos_estudios" 
-                        value="{{ p.clave }}" 
-                        id="nuevo_{{ p.clave }}"
-                    >
-                    <label for="nuevo_{{ p.clave }}">
-                        {{ p.nombre }} 
-                        - ${{ precios.get('prueba_' + p.clave, 0) }}
-                        ({{ 
-                            contenedores | selectattr('id', 'equalto', p.id_contenedor) | map(attribute='nombre') | first 
-                        }})
-                    </label>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <p>No hay más estudios disponibles para agregar.</p>
-            {% endif %}
+        <h3>Estudios ya asignados</h3>
+        {% for estudio in estudios_asignados %}
+        <div class="estudio-asignado">
+            {{ estudio.nombre }} - ${{ estudio.precio }}
+            <input type="checkbox" name="eliminar_{{ estudio.clave }}" id="eliminar_{{ estudio.clave }}">
+            <label for="eliminar_{{ estudio.clave }}">Eliminar</label>
         </div>
+        {% endfor %}
 
-        <!-- Eliminar estudios existentes -->
-        <div class="seccion">
-            <h3>Estudios actuales (marca para eliminar)</h3>
-            {% if estudios_asignados %}
-            <div class="checkbox-list">
-                {% for e in estudios_asignados %}
-                <div>
-                    <input 
-                        type="checkbox" 
-                        name="eliminar_{{ e.clave }}" 
-                        value="1" 
-                        id="eliminar_{{ e.clave }}"
-                    >
-                    <label for="eliminar_{{ e.clave }}">
-                        {{ e.nombre }} - ${{ e.precio }}
-                    </label>
+        <h3>Agregar nuevos estudios</h3>
+        <div style="max-height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+            {% for p in pruebas %}
+            <div class="prueba-item">
+                <input type="checkbox" name="nuevos_estudios" value="{{ p.clave }}" id="nuevo_{{ p.clave }}">
+                <label for="nuevo_{{ p.clave }}"><strong>{{ p.nombre }}</strong></label>
+                
+                <div style="margin-left: 20px; font-size: 0.9em;">
+                    <label>Procesar en:</label>
+                    <select name="laboratorio_nuevo_{{ p.clave }}" id="lab_nuevo_{{ p.clave }}">
+                        <option value="matriz">Matriz (CARE)</option>
+                        <option value="sigma">SIGMA (maquila)</option>
+                    </select>
                 </div>
-                {% endfor %}
+                
+                <div style="margin-left: 20px; color: #666;" class="info">
+                    Precio: ${{ precios_dict.get('prueba_' + p.clave, {}).get('precio_publico_matriz', 0) }}
+                </div>
             </div>
-            {% else %}
-            <p>No tiene estudios asignados.</p>
-            {% endif %}
+            {% endfor %}
         </div>
 
         <button type="submit">Guardar Cambios</button>
-        <a href="/" class="btn btn-volver">Cancelar</a>
+        <a href="/" class="btn">← Inicio</a>
     </form>
 </body>
 </html>
