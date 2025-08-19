@@ -122,7 +122,7 @@ def resumen(folio):
         
         # Precio público
         precio_data = precios_dict.get(f"prueba_{clave}")
-        if precio_
+        if precio_data:
             if procesado_en == 'sigma':
                 precio_publico = precio_data.get('precio_publico_sigma', 0)
             else:
