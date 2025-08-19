@@ -180,7 +180,7 @@ def admin_pruebas():
 
 @app.route('/admin/precios', methods=['GET', 'POST'])
 def admin_precios():
-    if request.method == 'POST'>
+    if request.method == 'POST':
         nuevos_precios = []
         for key in request.form:
             if key.startswith('tipo_'):
@@ -251,7 +251,7 @@ def resultados(folio):
     claves_solicitadas = [e['clave'] for e in paciente.get('estudios', [])]
     pruebas_solicitadas = [p for p in pruebas if p['clave'] in claves_solicitadas]
 
-    if request.method == 'POST'>
+    if request.method == 'POST':
         clave = request.form['prueba']
         resultado = request.form['resultado']
         prueba = next((p for p in pruebas if p['clave'] == clave), None)
@@ -289,7 +289,7 @@ def editar_paciente(folio):
     if not paciente:
         return "Paciente no encontrado", 404
 
-    if request.method == 'POST'>
+    if request.method == 'POST':
         paciente['nombre'] = request.form['nombre']
         paciente['fecha_nacimiento'] = request.form['fecha_nac']
         paciente['sexo'] = request.form['sexo']
