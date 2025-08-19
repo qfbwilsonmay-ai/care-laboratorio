@@ -11,8 +11,6 @@
         .btn-guardar { background: #28a745; color: white; border: none; }
         .btn-editar { background: #007bff; color: white; border: none; }
         .btn-validar { background: #ffc107; color: black; border: none; }
-        .btn-eliminar { background: #d9534f; color: white; border: none; }
-        .btn-agregar { background: #5bc0de; color: white; padding: 10px 20px; border: none; margin: 10px 0; }
         .fila-validada { background-color: #d4edda; }
         .fila-normal { background-color: white; }
         .buscador {
@@ -43,11 +41,9 @@
     <a href="/" class="btn">← Inicio</a>
     <a href="/admin/precios" class="btn">Administrar Precios</a>
 
+    <input type="text" id="buscador" class="buscador" placeholder="Buscar por clave o nombre..." onkeyup="buscarPruebas()">
+
     <form method="POST" id="formPruebas">
-        <input type="text" id="buscador" class="buscador" placeholder="Buscar por clave o nombre..." onkeyup="buscarPruebas()">
-
-        <button type="button" class="btn-agregar" onclick="agregarFila()">➕ Agregar Nueva Prueba</button>
-
         <table id="tablaPruebas">
             <tr>
                 <th>Clave</th>
@@ -63,7 +59,8 @@
 
             <tr class="{{ clase_fila }}" id="fila_{{ loop.index }}">
                 <td>
-                    <input type="text" name="clave_{{ loop.index }}" value="{{ p.clave }}" required {{ 'readonly' if validado else '' }}>
+                    <input type="hidden" name="clave_{{ loop.index }}" value="{{ p.clave }}">
+                    {{ p.clave }}
                 </td>
                 <td>
                     <input type="text" name="nombre_{{ loop.index }}" value="{{ p.nombre }}" required {{ 'readonly' if validado else '' }}>
@@ -96,7 +93,6 @@
                     <input type="hidden" name="validado_{{ loop.index }}" id="validado_{{ loop.index }}" value="{{ '1' if validado else '0' }}">
                     {% if validado %}
                         <button type="button" class="btn-editar" onclick="editarFila({{ loop.index }})">Editar</button>
-                        <button type="button" class="btn-eliminar" onclick="eliminarFila({{ loop.index }})">Eliminar</button>
                     {% else %}
                         <button type="button" class="btn-validar" onclick="validarFila({{ loop.index }})">Validar</button>
                     {% endif %}
@@ -110,8 +106,6 @@
     </form>
 
     <script>
-        let contador = {{ pruebas | length }};
-
         function buscarPruebas() {
             const input = document.getElementById('buscador');
             const filter = input.value.toLowerCase();
@@ -139,8 +133,7 @@
             document.getElementById(`fila_${idx}`).classList.add('fila-validada');
             document.getElementById(`validado_${idx}`).value = '1';
             document.querySelector(`#fila_${idx} td:last-child`).innerHTML = 
-                `<button type="button" class="btn-editar" onclick="editarFila(${idx})">Editar</button>
-                 <button type="button" class="btn-eliminar" onclick="eliminarFila(${idx})">Eliminar</button>`;
+                `<button type="button" class="btn-editar" onclick="editarFila(${idx})">Editar</button>`;
         }
 
         function editarFila(idx) {
@@ -159,41 +152,10 @@
                 `<button type="button" class="btn-validar" onclick="validarFila(${idx})">Validar</button>`;
         }
 
-        function agregarFila() {
-            contador++;
-            const tabla = document.getElementById('tablaPruebas');
-            const nuevaFila = document.createElement('tr');
-            nuevaFila.id = `fila_${contador}`;
-            nuevaFila.className = 'fila-normal';
-            nuevaFila.innerHTML = `
-                <td><input type="text" name="clave_${contador}" placeholder="Clave" required></td>
-                <td><input type="text" name="nombre_${contador}" placeholder="Nombre" required></td>
-                <td><input type="text" name="tipo_muestra_${contador}" placeholder="Tipo de muestra" required></td>
-                <td>
-                    <select name="id_contenedor_${contador}">
-                        {% for cont in contenedores %}
-                        <option value="{{ cont.id }}">{{ cont.nombre }}</option>
-                        {% endfor %}
-                    </select>
-                </td>
-                <td>
-                    <input type="text" name="unidad_${contador}" placeholder="Unidad" required>
-                    <input type="text" name="valores_normales_${contador}" placeholder="Valores normales" required>
-                    <input type="hidden" name="tipo_${contador}" value="cuantitativa">
-                </td>
-                <td>
-                    <input type="hidden" name="validado_${contador}" id="validado_${contador}" value="0">
-                    <button type="button" class="btn-validar" onclick="validarFila(${contador})">Validar</button>
-                </td>
-            `;
-            tabla.appendChild(nuevaFila);
-        }
-
-        function eliminarFila(idx) {
-            if (confirm('¿Eliminar esta prueba?')) {
-                document.getElementById(`fila_${idx}`).remove();
-            }
-        }
+        // Activar buscador al cargar
+        document.addEventListener('DOMContentLoaded', function() {
+            buscarPruebas();
+        });
     </script>
 </body>
 </html>
