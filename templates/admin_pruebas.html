@@ -7,68 +7,150 @@
         table { width: 100%; border-collapse: collapse; margin: 20px 0; }
         th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
         input, select { width: 100%; padding: 8px; margin: 5px 0; }
-        button { background: #d9534f; color: white; padding: 10px 20px; border: none; margin: 10px 0; }
-        .parametros { margin-left: 20px; background: #f9f9f9; padding: 10px; border: 1px dashed #ccc; }
-        .prueba { margin-bottom: 30px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        button { padding: 8px 12px; margin: 2px; cursor: pointer; }
+        .btn-guardar { background: #28a745; color: white; border: none; }
+        .btn-editar { background: #007bff; color: white; border: none; }
+        .btn-validar { background: #ffc107; color: black; border: none; }
+        .fila-validada { background-color: #d4edda; } /* Verde claro */
+        .fila-normal { background-color: white; }
+        .buscador {
+            font-size: 1.1em;
+            padding: 10px;
+            width: 100%;
+            margin-bottom: 20px;
+            border: 2px solid #0066cc;
+            border-radius: 5px;
+        }
+        .btn-anclado {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1em;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 100;
+        }
     </style>
 </head>
 <body>
-    <h1>Administrar Pruebas y Rangos</h1>
-    <a href="/">← Volver al inicio</a>
-    <form method="POST">
-        {% for p in pruebas %}
-        <div class="prueba">
-            <h3>Prueba: {{ loop.index }}</h3>
-            <label>Clave:</label>
-            <input type="text" name="clave_{{ loop.index }}" value="{{ p.clave }}" required>
+    <h1>Administrar Pruebas</h1>
+    <a href="/" class="btn">← Inicio</a>
+    <a href="/admin/precios" class="btn">Administrar Precios</a>
 
-            <label>Nombre:</label>
-            <input type="text" name="nombre_{{ loop.index }}" value="{{ p.nombre }}" required>
+    <form method="POST" id="formPruebas">
+        <input type="text" id="buscador" class="buscador" placeholder="Buscar pruebas..." onkeyup="buscarPruebas()">
 
-            <label>Tipo de muestra:</label>
-            <input type="text" name="tipo_muestra_{{ loop.index }}" value="{{ p.tipo_muestra }}" required>
+        <table id="tablaPruebas">
+            <tr>
+                <th>Clave</th>
+                <th>Nombre</th>
+                <th>Tipo de Muestra</th>
+                <th>Contenedor</th>
+                <th>Unidad / Valores Normales</th>
+                <th>Acciones</th>
+            </tr>
+            {% for p in pruebas %}
+            {% set validado = p.get('validado', false) %}
+            {% set clase_fila = "fila-validada" if validado else "fila-normal" %}
 
-            <label>Contenedor:</label>
-            <select name="id_contenedor_{{ loop.index }}" required>
-                {% for c in contenedores %}
-                <option value="{{ c.id }}" {% if c.id == p.id_contenedor %}selected{% endif %}>{{ c.nombre }}</option>
-                {% endfor %}
-            </select>
+            <tr class="{{ clase_fila }}" id="fila_{{ loop.index }}">
+                <td>
+                    <input type="hidden" name="clave_{{ loop.index }}" value="{{ p.clave }}">
+                    {{ p.clave }}
+                </td>
+                <td>
+                    <input type="text" name="nombre_{{ loop.index }}" value="{{ p.nombre }}" required {{ 'readonly' if validado else '' }}>
+                </td>
+                <td>
+                    <input type="text" name="tipo_muestra_{{ loop.index }}" value="{{ p.tipo_muestra }}" required {{ 'readonly' if validado else '' }}>
+                </td>
+                <td>
+                    <select name="id_contenedor_{{ loop.index }}" {{ 'disabled' if validado else '' }}>
+                        {% for cont in contenedores %}
+                        <option value="{{ cont.id }}" {% if cont.id == p.id_contenedor %}selected{% endif %}>{{ cont.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td>
+                    {% if p.tipo == "cuantitativa" %}
+                        <input type="text" name="unidad_{{ loop.index }}" value="{{ p.unidad }}" placeholder="Unidad" {{ 'readonly' if validado else '' }}>
+                        <input type="text" name="valores_normales_{{ loop.index }}" value="{{ p.valores_normales }}" placeholder="Valores normales" {{ 'readonly' if validado else '' }}>
+                        <input type="hidden" name="tipo_{{ loop.index }}" value="cuantitativa">
+                    {% elif p.tipo == "multiparametrica" %}
+                        <input type="hidden" name="tipo_{{ loop.index }}" value="multiparametrica">
+                        <div style="font-size: 0.9em; color: #666;">
+                            {% for param in p.parametros %}
+                            <div>Parámetro: {{ param.nombre }} ({{ param.unidad }}) - {{ param.valores_normales }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </td>
+                <td>
+                    <input type="hidden" name="validado_{{ loop.index }}" id="validado_{{ loop.index }}" value="{{ '1' if validado else '0' }}">
+                    {% if validado %}
+                        <button type="button" class="btn-editar" onclick="editarFila({{ loop.index }})">Editar</button>
+                    {% else %}
+                        <button type="button" class="btn-validar" onclick="validarFila({{ loop.index }})">Validar</button>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
 
-            <label>Tipo:</label>
-            <label><input type="checkbox" name="tipo_{{ loop.index }}" value="multiparametrica" 
-                {% if p.tipo == 'multiparametrica' %}checked{% endif %}> Multiparamétrica</label>
-
-            {% if p.tipo == 'multiparametrica' and p.parametros %}
-            <div class="parametros">
-                <h4>Parámetros</h4>
-                {% for param in p.parametros %}
-                <div>
-                    <label>Clave:</label>
-                    <input type="text" name="param_clave_{{ loop.index }}_{{ loop.index0 }}" value="{{ param.clave }}" required>
-
-                    <label>Nombre:</label>
-                    <input type="text" name="param_nombre_{{ loop.index }}_{{ loop.index0 }}" value="{{ param.nombre }}" required>
-
-                    <label>Unidad:</label>
-                    <input type="text" name="param_unidad_{{ loop.index }}_{{ loop.index0 }}" value="{{ param.unidad }}" required>
-
-                    <label>Valores Normales:</label>
-                    <input type="text" name="param_rango_{{ loop.index }}_{{ loop.index0 }}" value="{{ param.valores_normales }}" required>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <label>Unidad:</label>
-            <input type="text" name="unidad_{{ loop.index }}" value="{{ p.unidad }}">
-
-            <label>Valores Normales:</label>
-            <input type="text" name="valores_normales_{{ loop.index }}" value="{{ p.valores_normales }}">
-            {% endif %}
-        </div>
-        {% endfor %}
-
-        <button type="submit">Guardar Cambios</button>
+        <button type="submit" class="btn-guardar">Guardar Todos</button>
+        <button type="submit" class="btn-anclado">Guardar Todos</button>
     </form>
+
+    <script>
+        function buscarPruebas() {
+            const input = document.getElementById('buscador');
+            const filter = input.value.toLowerCase();
+            const filas = document.querySelectorAll('#tablaPruebas tr[id^="fila_"]');
+            filas.forEach(fila => {
+                const texto = fila.textContent.toLowerCase();
+                if (texto.includes(filter)) {
+                    fila.style.display = '';
+                } else {
+                    fila.style.display = 'none';
+                }
+            });
+        }
+
+        function validarFila(idx) {
+            const inputs = document.querySelectorAll(`#fila_${idx} input`);
+            const selects = document.querySelectorAll(`#fila_${idx} select`);
+            inputs.forEach(input => {
+                if (input.name.startsWith('validado_')) return;
+                input.setAttribute('readonly', 'readonly');
+            });
+            selects.forEach(select => {
+                select.setAttribute('disabled', 'disabled');
+            });
+            document.getElementById(`fila_${idx}`).classList.add('fila-validada');
+            document.getElementById(`validado_${idx}`).value = '1';
+            document.querySelector(`#fila_${idx} td:last-child`).innerHTML = 
+                `<button type="button" class="btn-editar" onclick="editarFila(${idx})">Editar</button>`;
+        }
+
+        function editarFila(idx) {
+            const inputs = document.querySelectorAll(`#fila_${idx} input`);
+            const selects = document.querySelectorAll(`#fila_${idx} select`);
+            inputs.forEach(input => {
+                if (input.name.startsWith('validado_')) return;
+                input.removeAttribute('readonly');
+            });
+            selects.forEach(select => {
+                select.removeAttribute('disabled');
+            });
+            document.getElementById(`fila_${idx}`).classList.remove('fila-validada');
+            document.getElementById(`validado_${idx}`).value = '0';
+            document.querySelector(`#fila_${idx} td:last-child`).innerHTML = 
+                `<button type="button" class="btn-validar" onclick="validarFila(${idx})">Validar</button>`;
+        }
+    </script>
 </body>
 </html>
