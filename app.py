@@ -26,54 +26,10 @@ def guardar_datos(ruta, datos):
     with open(ruta, 'w', encoding='utf-8') as f:
         json.dump(datos, f, indent=4, ensure_ascii=False)
 
-def generar_folio():
-    return datetime.now().strftime("%y%m%d%I")
-
-def calcular_edad(fecha_nac):
-    from datetime import datetime
-    nac = datetime.strptime(fecha_nac, "%Y-%m-%d")
-    hoy = datetime.now()
-    edad = hoy.year - nac.year
-    if hoy.month < nac.month or (hoy.month == nac.month and hoy.day < nac.day):
-        edad -= 1
-    return edad
-
 @app.route('/')
 def index():
     pacientes = cargar_datos(RUTA_PACIENTES)
     return render_template('index.html', pacientes=pacientes)
-
-@app.route('/registro', methods=['GET', 'POST'])
-def registro():
-    if request.method == 'POST':
-        nombre = request.form['nombre']
-        fecha_nac = request.form['fecha_nac']
-        sexo = request.form['sexo']
-        diagnostico = request.form['diagnostico']
-        medico = request.form['medico']
-
-        folio = generar_folio()
-        edad = calcular_edad(fecha_nac) if fecha_nac else int(request.form.get('edad_manual', 0))
-
-        paciente = {
-            "folio": folio,
-            "nombre": nombre,
-            "fecha_nacimiento": fecha_nac,
-            "edad": edad,
-            "sexo": sexo,
-            "diagnostico": diagnostico,
-            "medico": medico,
-            "estudios": [],
-            "fecha_registro": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        }
-
-        pacientes = cargar_datos(RUTA_PACIENTES)
-        pacientes.append(paciente)
-        guardar_datos(RUTA_PACIENTES, pacientes)
-
-        return redirect(url_for('index'))
-
-    return render_template('registro.html')
 
 @app.route('/admin/pruebas', methods=['GET', 'POST'])
 def admin_pruebas():
@@ -93,12 +49,10 @@ def admin_pruebas():
                         "tipo": "cuantitativa"
                     }
                     nuevas_pruebas.append(prueba)
-                except:
+                except Exception as e:
                     continue
 
-        with open('datos/pruebas.json', 'w', encoding='utf-8') as f:
-            json.dump(nuevas_pruebas, f, indent=4, ensure_ascii=False)
-
+        guardar_datos('datos/pruebas.json', nuevas_pruebas)
         return redirect(url_for('admin_pruebas'))
 
     pruebas = cargar_datos('datos/pruebas.json')
