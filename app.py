@@ -58,8 +58,9 @@ def registro():
             prueba = next((p for p in pruebas if p['clave'] == clave), None)
             if prueba:
                 precio_data = precios_dict.get(f"prueba_{clave}")
-                precio_final = 0
-                if precio_
+                if not precio_data:
+                    precio_final = 0
+                else:
                     if laboratorios[clave] == 'sigma':
                         precio_final = precio_data.get('precio_publico_sigma', 0)
                     else:
@@ -98,124 +99,34 @@ def registro():
         precios_dict=precios_dict
     )
 
-@app.route('/editar_paciente/<folio>', methods=['GET', 'POST'])
-def editar_paciente(folio):
-    pacientes = cargar_datos(RUTA_PACIENTES)
-    paciente = next((p for p in pacientes if p['folio'] == folio), None)
-
-    if not paciente:
-        return "Paciente no encontrado", 404
-
+@app.route('/admin/pruebas', methods=['GET', 'POST'])
+def admin_pruebas():
     if request.method == 'POST':
-        paciente['nombre'] = request.form['nombre']
-        paciente['fecha_nacimiento'] = request.form['fecha_nac']
-        paciente['sexo'] = request.form['sexo']
-        paciente['diagnostico'] = request.form['diagnostico']
-        paciente['medico'] = request.form['medico']
+        nuevas_pruebas = []
+        for key in request.form:
+            if key.startswith('clave_'):
+                idx = key.split('_')[1]
+                try:
+                    prueba = {
+                        "clave": request.form[f'clave_{idx}'].strip(),
+                        "nombre": request.form[f'nombre_{idx}'].strip(),
+                        "tipo_muestra": request.form[f'tipo_muestra_{idx}'].strip(),
+                        "id_contenedor": int(request.form[f'id_contenedor_{idx}']),
+                        "unidad": request.form[f'unidad_{idx}'].strip(),
+                        "valores_normales": request.form[f'valores_normales_{idx}'].strip(),
+                        "tipo": "cuantitativa"
+                    }
+                    nuevas_pruebas.append(prueba)
+                except Exception as e:
+                    continue
 
-        if paciente['fecha_nacimiento']:
-            paciente['edad'] = calcular_edad(paciente['fecha_nacimiento'])
-        elif request.form.get('edad_manual'):
-            paciente['edad'] = int(request.form['edad_manual'])
+        with open('datos/pruebas.json', 'w', encoding='utf-8') as f:
+            json.dump(nuevas_pruebas, f, indent=4, ensure_ascii=False)
 
-        nuevos_estudios_claves = request.form.getlist('nuevos_estudios')
-        laboratorios = {}
-        for clave in nuevos_estudios_claves:
-            lab = request.form.get(f'laboratorio_nuevo_{clave}', 'matriz')
-            laboratorios[clave] = lab
+        return redirect(url_for('admin_pruebas'))
 
-        pruebas, contenedores, _, precios_dict = cargar_catalogos()
-
-        nuevos_estudios = []
-        claves_existentes = [e['clave'] for e in paciente.get('estudios', [])]
-        for clave in nuevos_estudios_claves:
-            if clave not in claves_existentes:
-                prueba = next((p for p in pruebas if p['clave'] == clave), None)
-                if prueba:
-                    precio_data = precios_dict.get(f"prueba_{clave}")
-                    precio_final = 0
-                    if precio_
-                        if laboratorios[clave] == 'sigma':
-                            precio_final = precio_data.get('precio_publico_sigma', 0)
-                        else:
-                            precio_final = precio_data.get('precio_publico_matriz', 0)
-
-                    nuevos_estudios.append({
-                        "clave": clave,
-                        "nombre": prueba['nombre'],
-                        "precio": precio_final,
-                        "procesado_en": laboratorios[clave]
-                    })
-
-        if 'estudios' not in paciente:
-            paciente['estudios'] = []
-        paciente['estudios'].extend(nuevos_estudios)
-
-        estudios_a_mantener = []
-        for estudio in paciente['estudios']:
-            if f"eliminar_{estudio['clave']}" not in request.form:
-                estudios_a_mantener.append(estudio)
-        paciente['estudios'] = estudios_a_mantener
-
-        guardar_datos(RUTA_PACIENTES, pacientes)
-        return redirect(url_for('index'))
-
-    pruebas, contenedores, _, precios_dict = cargar_catalogos()
-
-    claves_asignadas = [e['clave'] for e in paciente.get('estudios', [])]
-    estudios_asignados = paciente.get('estudios', [])
-    pruebas_disponibles = [p for p in pruebas if p['clave'] not in claves_asignadas]
-
-    return render_template(
-        'editar_paciente.html',
-        paciente=paciente,
-        pruebas=pruebas_disponibles,
-        contenedores=contenedores,
-        precios_dict=precios_dict,
-        estudios_asignados=estudios_asignados
-    )
-
-@app.route('/resultados/<folio>', methods=['GET', 'POST'])
-def resultados(folio):
-    pruebas, contenedores, _, precios_dict = cargar_catalogos()
-    pacientes = cargar_datos(RUTA_PACIENTES)
-    paciente = next((p for p in pacientes if p['folio'] == folio), None)
-
-    if not paciente:
-        return "Paciente no encontrado", 404
-
-    claves_solicitadas = [e['clave'] for e in paciente.get('estudios', [])]
-    pruebas_solicitadas = [p for p in pruebas if p['clave'] in claves_solicitadas]
-
-    if request.method == 'POST':
-        clave = request.form['prueba']
-        resultado = request.form['resultado']
-        prueba = next((p for p in pruebas if p['clave'] == clave), None)
-        if not prueba:
-            return "Prueba no encontrada", 400
-
-        resultado_data = {
-            "folio": folio,
-            "clave": prueba['clave'],
-            "nombre": prueba['nombre'],
-            "resultado": resultado,
-            "unidad": prueba['unidad'],
-            "valores_normales": prueba['valores_normales'],
-            "fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        }
-
-        resultados = cargar_datos(RUTA_RESULTADOS)
-        resultados.append(resultado_data)
-        guardar_datos(RUTA_RESULTADOS, resultados)
-        return redirect(url_for('resultados', folio=folio))
-
-    resultados = [r for r in cargar_datos(RUTA_RESULTADOS) if r['folio'] == folio]
-    return render_template(
-        'resultados.html',
-        paciente=paciente,
-        pruebas=pruebas_solicitadas,
-        resultados=resultados
-    )
+    pruebas, contenedores, _, _ = cargar_catalogos()
+    return render_template('admin_pruebas.html', pruebas=pruebas, contenedores=contenedores)
 
 @app.route('/admin/precios', methods=['GET', 'POST'])
 def admin_precios():
@@ -278,33 +189,125 @@ def admin_precios():
     precios_dict = {f"{p['tipo']}_{p['id_elemento']}": p for p in precios}
     return render_template('admin_precios.html', pruebas=pruebas, precios_dict=precios_dict)
 
-@app.route('/admin/pruebas', methods=['GET', 'POST'])
-def admin_pruebas():
+@app.route('/resultados/<folio>', methods=['GET', 'POST'])
+def resultados(folio):
+    pruebas, contenedores, _, precios_dict = cargar_catalogos()
+    pacientes = cargar_datos(RUTA_PACIENTES)
+    paciente = next((p for p in pacientes if p['folio'] == folio), None)
+
+    if not paciente:
+        return "Paciente no encontrado", 404
+
+    claves_solicitadas = [e['clave'] for e in paciente.get('estudios', [])]
+    pruebas_solicitadas = [p for p in pruebas if p['clave'] in claves_solicitadas]
+
     if request.method == 'POST':
-        nuevas_pruebas = []
-        for key in request.form:
-            if key.startswith('clave_'):
-                idx = key.split('_')[1]
-                try:
-                    prueba = {
-                        "clave": request.form[f'clave_{idx}'].strip(),
-                        "nombre": request.form[f'nombre_{idx}'].strip(),
-                        "tipo_muestra": request.form[f'tipo_muestra_{idx}'].strip(),
-                        "id_contenedor": int(request.form[f'id_contenedor_{idx}']),
-                        "unidad": request.form[f'unidad_{idx}'].strip(),
-                        "valores_normales": request.form[f'valores_normales_{idx}'].strip(),
-                        "tipo": "cuantitativa"
-                    }
-                    nuevas_pruebas.append(prueba)
-                except Exception as e:
-                    continue
+        clave = request.form['prueba']
+        resultado = request.form['resultado']
+        prueba = next((p for p in pruebas if p['clave'] == clave), None)
+        if not prueba:
+            return "Prueba no encontrada", 400
 
-        with open('datos/pruebas.json', 'w', encoding='utf-8') as f:
-            json.dump(nuevas_pruebas, f, indent=4, ensure_ascii=False)
-        return redirect(url_for('admin_pruebas'))
+        resultado_data = {
+            "folio": folio,
+            "clave": prueba['clave'],
+            "nombre": prueba['nombre'],
+            "resultado": resultado,
+            "unidad": prueba['unidad'],
+            "valores_normales": prueba['valores_normales'],
+            "fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }
 
-    pruebas, contenedores, _, _ = cargar_catalogos()
-    return render_template('admin_pruebas.html', pruebas=pruebas, contenedores=contenedores)
+        resultados = cargar_datos(RUTA_RESULTADOS)
+        resultados.append(resultado_data)
+        guardar_datos(RUTA_RESULTADOS, resultados)
+        return redirect(url_for('resultados', folio=folio))
+
+    resultados = [r for r in cargar_datos(RUTA_RESULTADOS) if r['folio'] == folio]
+    return render_template(
+        'resultados.html',
+        paciente=paciente,
+        pruebas=pruebas_solicitadas,
+        resultados=resultados
+    )
+
+@app.route('/editar_paciente/<folio>', methods=['GET', 'POST'])
+def editar_paciente(folio):
+    pacientes = cargar_datos(RUTA_PACIENTES)
+    paciente = next((p for p in pacientes if p['folio'] == folio), None)
+
+    if not paciente:
+        return "Paciente no encontrado", 404
+
+    if request.method == 'POST':
+        paciente['nombre'] = request.form['nombre']
+        paciente['fecha_nacimiento'] = request.form['fecha_nac']
+        paciente['sexo'] = request.form['sexo']
+        paciente['diagnostico'] = request.form['diagnostico']
+        paciente['medico'] = request.form['medico']
+
+        if paciente['fecha_nacimiento']:
+            paciente['edad'] = calcular_edad(paciente['fecha_nacimiento'])
+        elif request.form.get('edad_manual'):
+            paciente['edad'] = int(request.form['edad_manual'])
+
+        nuevos_estudios_claves = request.form.getlist('nuevos_estudios')
+        laboratorios = {}
+        for clave in nuevos_estudios_claves:
+            lab = request.form.get(f'laboratorio_nuevo_{clave}', 'matriz')
+            laboratorios[clave] = lab
+
+        pruebas, contenedores, _, precios_dict = cargar_catalogos()
+
+        nuevos_estudios = []
+        claves_existentes = [e['clave'] for e in paciente.get('estudios', [])]
+        for clave in nuevos_estudios_claves:
+            if clave not in claves_existentes:
+                prueba = next((p for p in pruebas if p['clave'] == clave), None)
+                if prueba:
+                    precio_data = precios_dict.get(f"prueba_{clave}")
+                    if not precio_data:
+                        precio_final = 0
+                    else:
+                        if laboratorios[clave] == 'sigma':
+                            precio_final = precio_data.get('precio_publico_sigma', 0)
+                        else:
+                            precio_final = precio_data.get('precio_publico_matriz', 0)
+
+                    nuevos_estudios.append({
+                        "clave": clave,
+                        "nombre": prueba['nombre'],
+                        "precio": precio_final,
+                        "procesado_en": laboratorios[clave]
+                    })
+
+        if 'estudios' not in paciente:
+            paciente['estudios'] = []
+        paciente['estudios'].extend(nuevos_estudios)
+
+        estudios_a_mantener = []
+        for estudio in paciente['estudios']:
+            if f"eliminar_{estudio['clave']}" not in request.form:
+                estudios_a_mantener.append(estudio)
+        paciente['estudios'] = estudios_a_mantener
+
+        guardar_datos(RUTA_PACIENTES, pacientes)
+        return redirect(url_for('index'))
+
+    pruebas, contenedores, _, precios_dict = cargar_catalogos()
+
+    claves_asignadas = [e['clave'] for e in paciente.get('estudios', [])]
+    estudios_asignados = paciente.get('estudios', [])
+    pruebas_disponibles = [p for p in pruebas if p['clave'] not in claves_asignadas]
+
+    return render_template(
+        'editar_paciente.html',
+        paciente=paciente,
+        pruebas=pruebas_disponibles,
+        contenedores=contenedores,
+        precios_dict=precios_dict,
+        estudios_asignados=estudios_asignados
+    )
 
 @app.route('/eliminar_paciente/<folio>')
 def eliminar_paciente(folio):
