@@ -39,7 +39,7 @@ def registro():
         nombre = request.form['nombre']
         fecha_nac = request.form['fecha_nac']
         sexo = request.form['sexo']
-        diagnostico = request.form['diagnostico']
+        diagnostico = request.form['diagnostico']  # Obligatorio
         medico = request.form['medico']
 
         # Obtener estudios seleccionados
@@ -52,7 +52,11 @@ def registro():
             laboratorios[clave] = lab
 
         folio = generar_folio()
-        edad = calcular_edad(fecha_nac)
+        # Calcular edad solo si hay fecha de nacimiento
+        if fecha_nac:
+            edad = calcular_edad(fecha_nac)
+        else:
+            edad = int(request.form['edad_manual']) if request.form['edad_manual'] else 0
 
         # Cargar pruebas y precios
         pruebas, contenedores, precios_lista, precios_dict = cargar_catalogos()
@@ -120,6 +124,12 @@ def editar_paciente(folio):
         paciente['sexo'] = request.form['sexo']
         paciente['diagnostico'] = request.form['diagnostico']
         paciente['medico'] = request.form['medico']
+
+        # Si hay fecha de nacimiento, calcular edad
+        if paciente['fecha_nacimiento']:
+            paciente['edad'] = calcular_edad(paciente['fecha_nacimiento'])
+        elif request.form.get('edad_manual'):
+            paciente['edad'] = int(request.form['edad_manual'])
 
         # Obtener nuevos estudios seleccionados
         nuevos_estudios_claves = request.form.getlist('nuevos_estudios')
