@@ -74,16 +74,20 @@
         <table id="tabla-estudios">
             <tr>
                 <th>Clave</th>
-                <th>Nombre</th>
-                <th>Procesado en</th>
-                <th>Precio Público</th>
+		<th>Nombre</th>
+		<th>Procesado en</th>
+		<th>Maquila</th>
+		<th>Precio Público</th>
             </tr>
             {% for estudio in paciente.estudios %}
             <tr>
                 <td>{{ estudio.clave }}</td>
-                <td>{{ estudio.nombre }}</td>
-                <td>{{ estudio.procesado_en|upper }}</td>
-                <td>$ {{ estudio.precio }}</td>
+		<td>{{ estudio.nombre }}</td>
+		<td>{{ estudio.procesado_en|upper }}</td>
+		<td>$ {{ 
+    		(cargar_catalogos()[2] | selectattr('tipo', 'equalto', 'prueba') | selectattr('id_elemento', 			'equalto', estudio.clave) | list)[0].costos[estudio.procesado_en].maquila if (cargar_catalogos()		[2] | selectattr('tipo', 'equalto', 'prueba') | selectattr('id_elemento', 'equalto', 				estudio.clave) | list) else 0 
+		}}</td>
+		<td>$ {{ estudio.precio }}</td>
             </tr>
             {% endfor %}
         </table>
