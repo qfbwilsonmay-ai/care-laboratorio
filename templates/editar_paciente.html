@@ -236,19 +236,14 @@
             eliminar.textContent = " ×";
             eliminar.className = "eliminar-estudio";
             eliminar.onclick = function() {
-                if (confirm('¿Eliminar este estudio?')) {
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = 'eliminar_{{ estudio.clave }}';
-                    input.value = '1';
-                    document.getElementById('registroForm').appendChild(input);
-                    liExistente.remove();
-                    actualizarResumen();
-                }
+                // Eliminar visualmente
+                liExistente.remove();
+                // Actualizar resumen
+                actualizarResumen();
             };
             liExistente.appendChild(eliminar);
             lista.appendChild(liExistente);
-            subtotal += parseFloat("{{ estudio.precio }}");
+            // No sumamos aquí el precio, lo hacemos en actualizarResumen
             {% endfor %}
 
             // Añadir nuevos seleccionados
@@ -257,12 +252,39 @@
                 const label = document.querySelector(`label[for="${checkbox.id}"]`).innerText;
                 const laboratorio = document.querySelector(`#lab_${clave}`).value;
                 const precio = preciosData[clave][laboratorio] || 0;
-                subtotal += precio;
 
                 const labText = laboratorio === 'matriz' ? 'Matriz' : 'SIGMA';
                 const li = document.createElement('li');
                 li.textContent = `${label} (${labText}) - $${precio}`;
                 lista.appendChild(li);
+                subtotal += precio;
+            });
+
+            // Sumar solo los existentes que no han sido eliminados
+            document.querySelectorAll('#lista-seleccionados li').forEach(li => {
+                const text = li.textContent;
+                const match = text.match(/\$(\d+(\.\d+)?)/);
+                if (match) {
+                    subtotal += parseFloat(match[1]);
+                }
+            });
+
+            const iva = subtotal * 0.16;
+            const total = subtotal + iva;
+
+            document.getElementById('subtotal').textContent = subtotal.toFixed(2);
+            document.getElementById('iva').textContent = iva.toFixed(2);
+            document.getElementById('total').textContent = total.toFixed(2);
+        }
+
+        function actualizarResumen() {
+            let subtotal = 0;
+            document.querySelectorAll('#lista-seleccionados li').forEach(li => {
+                const text = li.textContent;
+                const match = text.match(/\$(\d+(\.\d+)?)/);
+                if (match) {
+                    subtotal += parseFloat(match[1]);
+                }
             });
 
             const iva = subtotal * 0.16;
