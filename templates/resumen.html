@@ -3,12 +3,7 @@
 <head>
     <title>Resumen Económico - CARE</title>
     <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            margin: 20px; 
-            position: relative; 
-            min-height: 100vh; 
-        }
+        body { font-family: Arial, sans-serif; margin: 20px; }
         h1, h2 { color: #0066cc; }
         .contenedor {
             max-width: 900px;
@@ -48,20 +43,18 @@
             margin: 8px 0;
         }
         .btn {
-            background: #0066cc; 
-            color: white; 
-            border: none; 
-            padding: 10px 15px; 
-            cursor: pointer; 
-            text-decoration: none;
-            border-radius: 5px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            background: #0066cc; color: white; border: none; padding: 10px 15px; cursor: pointer; text-decoration: none;
         }
-        /* Botón anclado en la esquina inferior derecha */
         .btn-inicio {
             position: fixed;
             bottom: 20px;
             right: 20px;
+            background: #0066cc;
+            color: white;
+            padding: 12px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
             z-index: 100;
         }
     </style>
@@ -74,20 +67,18 @@
         <table id="tabla-estudios">
             <tr>
                 <th>Clave</th>
-		<th>Nombre</th>
-		<th>Procesado en</th>
-		<th>Maquila</th>
-		<th>Precio Público</th>
+                <th>Nombre</th>
+                <th>Procesado en</th>
+                <th>Maquila</th>
+                <th>Precio Público</th>
             </tr>
-            {% for estudio in paciente.estudios %}
+            {% for estudio in estudios_con_maquila %}
             <tr>
                 <td>{{ estudio.clave }}</td>
-		<td>{{ estudio.nombre }}</td>
-		<td>{{ estudio.procesado_en|upper }}</td>
-		<td>$ {{ 
-    		(cargar_catalogos()[2] | selectattr('tipo', 'equalto', 'prueba') | selectattr('id_elemento', 			'equalto', estudio.clave) | list)[0].costos[estudio.procesado_en].maquila if (cargar_catalogos()		[2] | selectattr('tipo', 'equalto', 'prueba') | selectattr('id_elemento', 'equalto', 				estudio.clave) | list) else 0 
-		}}</td>
-		<td>$ {{ estudio.precio }}</td>
+                <td>{{ estudio.nombre }}</td>
+                <td>{{ estudio.procesado_en|upper }}</td>
+                <td>$ {{ estudio.maquila }}</td>
+                <td>$ {{ estudio.precio }}</td>
             </tr>
             {% endfor %}
         </table>
@@ -103,13 +94,12 @@
         </div>
 
         <div class="totales">
-            <div><strong>Subtotal (maquila + materiales + envío + ganancia):</strong> $<span id="subtotal">{{ subtotal }}</span></div>
+            <div><strong>Subtotal:</strong> $<span id="subtotal">{{ subtotal }}</span></div>
             <div><strong>IVA (16%):</strong> $<span id="iva">{{ iva }}</span></div>
             <div class="total"><strong>Total a Pagar:</strong> $<span id="total">{{ total }}</span></div>
         </div>
     </div>
 
-    <!-- Botón de Inicio anclado en la esquina inferior derecha -->
-    <a href="/" class="btn btn-inicio">← Inicio</a>
+    <a href="/" class="btn-inicio">← Inicio</a>
 </body>
 </html>
