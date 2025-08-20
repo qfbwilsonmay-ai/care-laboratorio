@@ -1,64 +1,195 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>CARE - Inicio</title>
+    <title>Pacientes - CARE</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
-        th { background-color: #f2f2f2; }
-        a { margin: 5px; text-decoration: none; color: #0066cc; }
-        .btn { display: inline-block; padding: 8px 16px; background: #0066cc; color: white; border: none; border-radius: 4px; }
-        .btn-danger { background: #d9534f; }
-        .btn-warning { background: #f0ad4e; }
-        .btn-info { background: #5bc0de; }
-        .stats { margin: 10px 0; font-size: 0.9em; color: #666; }
+        h1 { color: #0066cc; }
+        .filtros {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .filtros label { font-weight: bold; }
+        .filtros input, .filtros select {
+            padding: 8px;
+            width: 180px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background: #0066cc;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .btn {
+            background: #0066cc; color: white; padding: 8px 12px; text-decoration: none; margin: 2px; display: inline-block; border-radius: 4px;
+        }
+        .btn-rojo {
+            background: #d9534f;
+        }
     </style>
 </head>
 <body>
-    <h1>CARE - Laboratorio Clínico</h1>
-    
-    <a href="/registro" class="btn">Registrar Paciente</a>
-    <a href="/admin/pruebas" class="btn btn-info">Administrar Pruebas</a>
-    <a href="/admin/precios" class="btn" style="background: #ff9800;">Administrar Precios</a>
+    <h1>Pacientes Registrados</h1>
 
-    <div class="stats">
-        <strong>Total de pacientes:</strong> {{ pacientes | length }}
+    <!-- Filtros -->
+    <div class="filtros">
+        <div>
+            <label>Folio</label>
+            <input type="text" id="filtroFolio" placeholder="Buscar folio" oninput="filtrarTabla()">
+        </div>
+        <div>
+            <label>Nombre</label>
+            <input type="text" id="filtroNombre" placeholder="Buscar nombre" oninput="filtrarTabla()">
+        </div>
+        <div>
+            <label>Fecha</label>
+            <input type="date" id="filtroFecha" oninput="filtrarTabla()">
+        </div>
+        <div>
+            <label>Rango</label>
+            <select id="filtroRango" onchange="filtrarTabla()">
+                <option value="dia">Hoy</option>
+                <option value="semana">Esta semana</option>
+                <option value="mes">Este mes</option>
+                <option value="año">Este año</option>
+                <option value="todo">Todo</option>
+            </select>
+        </div>
     </div>
 
-    <h2>Pacientes Registrados</h2>
-    <table>
-        <tr>
-            <th>Folio</th>
-            <th>Nombre</th>
-            <th>Edad</th>
-            <th>Sexo</th>
-            <th>Médico</th>
-            <th>Acciones</th>
-        </tr>
-        {% for p in pacientes %}
-        <tr>
-            <td>{{ p.folio }}</td>
-            <td>{{ p.nombre }}</td>
-            <td>{{ p.edad }}</td>
-            <td>
-                {% if p.sexo == "M" %}
-                    Hombre
-                {% elif p.sexo == "F" %}
-                    Mujer
-                {% else %}
-                    Otro
-                {% endif %}
-            </td>
-            <td>{{ p.medico }}</td>
-            <td>
-                <a href="/resultados/{{ p.folio }}" class="btn">Resultados</a>
-                <a href="/editar_paciente/{{ p.folio }}" class="btn btn-warning">Editar</a>
-                <a href="/resumen/{{ p.folio }}" class="btn btn-info">Resumen Económico</a>
-                <a href="/eliminar_paciente/{{ p.folio }}" class="btn btn-danger" onclick="return confirm('¿Eliminar paciente?')">Eliminar</a>
-            </td>
-        </tr>
-        {% endfor %}
+    <!-- Tabla de pacientes -->
+    <table id="tablaPacientes">
+        <thead>
+            <tr>
+                <th>Folio</th>
+                <th>Nombre</th>
+                <th>Edad</th>
+                <th>Sexo</th>
+                <th>Fecha Registro</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for paciente in pacientes %}
+            <tr data-folio="{{ paciente.folio|lower }}"
+                data-nombre="{{ paciente.nombre|lower }}"
+                data-fecha="{{ paciente.fecha_registro }}">
+                <td>{{ paciente.folio }}</td>
+                <td>{{ paciente.nombre }}</td>
+                <td>{{ paciente.edad }}</td>
+                <td>{{ paciente.sexo }}</td>
+                <td>{{ paciente.fecha_registro }}</td>
+                <td>
+                    <a href="/resumen/{{ paciente.folio }}" class="btn">Resumen</a>
+                    <a href="/editar_paciente/{{ paciente.folio }}" class="btn">Editar</a>
+                    <a href="/resultados/{{ paciente.folio }}" class="btn">Resultados</a>
+                    <a href="/eliminar_paciente/{{ paciente.folio }}" class="btn btn-rojo" onclick="return confirm('¿Seguro que deseas eliminar a este paciente?')">Eliminar</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
     </table>
+
+    <br>
+    <a href="/registro" class="btn">Registrar Nuevo Paciente</a>
+    <a href="/admin/pruebas" class="btn">Administrar Pruebas</a>
+    <a href="/admin/precios" class="btn">Administrar Precios</a>
+
+    <script>
+        function filtrarTabla() {
+            const filtroFolio = document.getElementById('filtroFolio').value.toLowerCase();
+            const filtroNombre = document.getElementById('filtroNombre').value.toLowerCase();
+            const filtroFecha = document.getElementById('filtroFecha').value;
+            const filtroRango = document.getElementById('filtroRango').value;
+
+            const hoy = new Date();
+            let fechaInicio, fechaFin;
+
+            if (filtroRango === 'dia') {
+                fechaInicio = new Date(hoy.setHours(0, 0, 0, 0));
+                fechaFin = new Date(hoy.setHours(23, 59, 59, 999));
+            } else if (filtroRango === 'semana') {
+                const dia = hoy.getDay();
+                const inicio = new Date(hoy);
+                inicio.setDate(hoy.getDate() - dia);
+                inicio.setHours(0, 0, 0, 0);
+                fechaInicio = inicio;
+
+                const fin = new Date(inicio);
+                fin.setDate(inicio.getDate() + 6);
+                fin.setHours(23, 59, 59, 999);
+                fechaFin = fin;
+            } else if (filtroRango === 'mes') {
+                fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+                fechaFin = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0, 23, 59, 59, 999);
+            } else if (filtroRango === 'año') {
+                fechaInicio = new Date(hoy.getFullYear(), 0, 1);
+                fechaFin = new Date(hoy.getFullYear(), 11, 31, 23, 59, 59, 999);
+            }
+
+            const filas = document.querySelectorAll('#tablaPacientes tbody tr');
+
+            filas.forEach(fila => {
+                const folio = fila.getAttribute('data-folio');
+                const nombre = fila.getAttribute('data-nombre');
+                const fechaStr = fila.getAttribute('data-fecha');
+                const fechaRegistro = new Date(fechaStr);
+
+                let cumpleFolio = !filtroFolio || folio.includes(filtroFolio);
+                let cumpleNombre = !filtroNombre || nombre.includes(filtroNombre);
+                let cumpleFecha = true;
+
+                if (filtroFecha) {
+                    const fechaFiltro = new Date(filtroFecha);
+                    const diaFiltro = fechaFiltro.getDate();
+                    const mesFiltro = fechaFiltro.getMonth();
+                    const añoFiltro = fechaFiltro.getFullYear();
+
+                    const diaReg = fechaRegistro.getDate();
+                    const mesReg = fechaRegistro.getMonth();
+                    const añoReg = fechaRegistro.getFullYear();
+
+                    cumpleFecha = (diaReg === diaFiltro && mesReg === mesFiltro && añoReg === añoFiltro);
+                } else if (filtroRango !== 'todo') {
+                    cumpleFecha = fechaRegistro >= fechaInicio && fechaRegistro <= fechaFin;
+                }
+
+                if (cumpleFolio && cumpleNombre && cumpleFecha) {
+                    fila.style.display = '';
+                } else {
+                    fila.style.display = 'none';
+                }
+            });
+        }
+
+        // Limpiar filtro de fecha cuando se cambia el rango
+        document.getElementById('filtroRango').addEventListener('change', function() {
+            if (this.value === 'todo') {
+                document.getElementById('filtroFecha').value = '';
+            }
+        });
+
+        // Limpiar rango cuando se usa filtro de fecha específica
+        document.getElementById('filtroFecha').addEventListener('input', function() {
+            if (this.value) {
+                document.getElementById('filtroRango').value = 'todo';
+            }
+        });
+    </script>
 </body>
 </html>
