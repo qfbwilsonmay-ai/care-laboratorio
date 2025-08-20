@@ -4,6 +4,14 @@
     <title>Administrar Pruebas - CARE</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
+        .buscador {
+            font-size: 1.1em;
+            padding: 10px;
+            width: 100%;
+            margin-bottom: 20px;
+            border: 2px solid #0066cc;
+            border-radius: 5px;
+        }
         table { width: 100%; border-collapse: collapse; margin: 20px 0; }
         th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
         input, select { width: 100%; padding: 8px; margin: 5px 0; }
@@ -11,12 +19,18 @@
         .btn-guardar { background: #28a745; color: white; border: none; }
         .btn-eliminar { background: #d9534f; color: white; border: none; }
         .btn { background: #007bff; color: white; padding: 8px 16px; text-decoration: none; margin: 5px; }
+        .prueba-item {
+            display: block;
+        }
     </style>
 </head>
 <body>
     <h1>Administrar Pruebas Clínicas</h1>
     <a href="/" class="btn">← Inicio</a>
     <a href="/admin/precios" class="btn">Administrar Precios</a>
+
+    <!-- Buscador -->
+    <input type="text" id="buscador" class="buscador" placeholder="Buscar por clave o nombre de prueba..." onkeyup="buscarPruebas()">
 
     <form method="POST" id="formPruebas">
         <table id="tablaPruebas">
@@ -30,7 +44,7 @@
                 <th>Acciones</th>
             </tr>
             {% for p in pruebas %}
-            <tr>
+            <tr class="prueba-item" data-clave="{{ p.clave|lower }}" data-nombre="{{ p.nombre|lower }}">
                 <td><input type="text" name="clave_{{ loop.index }}" value="{{ p.clave }}" required></td>
                 <td><input type="text" name="nombre_{{ loop.index }}" value="{{ p.nombre }}" required></td>
                 <td><input type="text" name="tipo_muestra_{{ loop.index }}" value="{{ p.tipo_muestra }}" required></td>
@@ -53,12 +67,38 @@
     </form>
 
     <script>
+        // Filtro en tiempo real por clave o nombre
+        function buscarPruebas() {
+            const input = document.getElementById('buscador');
+            const filter = input.value.toLowerCase();
+            const filas = document.getElementsByClassName('prueba-item');
+
+            for (let i = 0; i < filas.length; i++) {
+                const clave = filas[i].getAttribute('data-clave');
+                const nombre = filas[i].getAttribute('data-nombre');
+                if (clave.includes(filter) || nombre.includes(filter)) {
+                    filas[i].style.display = '';
+                } else {
+                    filas[i].style.display = 'none';
+                }
+            }
+        }
+
+        // Eliminar fila
         function eliminarFila(btn) {
             if (confirm('¿Seguro que deseas eliminar esta prueba?')) {
                 const fila = btn.closest('tr');
                 fila.remove();
             }
         }
+
+        // Mostrar todas las pruebas al cargar
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                const allPruebas = document.querySelectorAll('.prueba-item');
+                allPruebas.forEach(el => el.style.display = '');
+            }, 100);
+        });
     </script>
 </body>
 </html>
