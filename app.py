@@ -107,20 +107,22 @@ def resumen(folio):
     if not paciente:
         return "Paciente no encontrado", 404
 
-    # Cargar precios
-    _, _, _, precios_dict = cargar_catalogos()
+    # Cargar precios y pruebas
+    pruebas, contenedores, _, precios_dict = cargar_catalogos()
 
     subtotal = 0
     maquila_matriz = 0
     maquila_sigma = 0
-    materiales = 0
     envio = 0
+
+    # Para evitar duplicar materiales: agrupamos por (id_contenedor, procesado_en)
+    extracciones = set()
 
     for estudio in paciente.get('estudios', []):
         clave = estudio['clave']
         procesado_en = estudio.get('procesado_en', 'matriz')
         
-        # === Precio público (con IVA incluido) ===
+        # === Precio público ===
         precio_data = precios_dict.get(f"prueba_{clave}")
         if precio_data:
             if procesado_en == 'sigma':
@@ -129,21 +131,44 @@ def resumen(folio):
                 precio_publico = precio_data.get('precio_publico_matriz', 0)
             subtotal += precio_publico
 
-            # === Costos directos, sin sumas extras ===
+            # === Costos detallados ===
             costo_matriz = precio_data.get('costos', {}).get('matriz', {})
             costo_sigma = precio_data.get('costos', {}).get('sigma', {})
 
-            # Solo el valor de "maquila" según donde se procese
+            # Solo el valor de "maquila"
             if procesado_en == 'matriz':
                 maquila_matriz += costo_matriz.get('maquila', 0)
             else:
                 maquila_sigma += costo_sigma.get('maquila', 0)
 
-            # Materiales: suma de ambos (solo el valor en la columna)
-            materiales += costo_matriz.get('materiales', 0) + costo_sigma.get('materiales', 0)
-
-            # Envío: suma de ambos (solo el valor en la columna)
+            # Envío
             envio += costo_matriz.get('envio', 0) + costo_sigma.get('envio', 0)
+
+        # Buscar el id_contenedor de la prueba
+        prueba_info = next((p for p in pruebas if p['clave'] == clave), None)
+        if prueba_info:
+            id_contenedor = prueba_info.get('id_contenedor')
+            if id_contenedor:
+                # Agrupamos por (contenedor, laboratorio)
+                extracciones.add((id_contenedor, procesado_en))
+
+    # Calcular materiales: una vez por combinación única de (contenedor, laboratorio)
+    materiales = 0
+    contenedores_dict = {c['id']: c for c in contenedores}
+    for id_cont, lab in extracciones:
+        cont = contenedores_dict.get(id_cont, {})
+        # Tomamos el costo de materiales del laboratorio correspondiente
+        mat = 0
+        for estudio in paciente.get('estudios', []):
+            clave = estudio['clave']
+            procesado_en = estudio.get('procesado_en', 'matriz')
+            if procesado_en == lab:
+                precio_data = precios_dict.get(f"prueba_{clave}")
+                if precio_data:
+                    costo = precio_data.get('costos', {}).get('matriz' if lab == 'matriz' else 'sigma', {})
+                    mat = costo.get('materiales', 0)
+                    break
+        materiales += mat
 
     total_maquila = maquila_matriz + maquila_sigma
     ganancia = subtotal - (total_maquila + materiales + envio)
