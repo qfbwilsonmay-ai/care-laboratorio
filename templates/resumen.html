@@ -3,7 +3,12 @@
 <head>
     <title>Resumen Económico - CARE</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            position: relative; 
+            min-height: 100vh; 
+        }
         h1, h2 { color: #0066cc; }
         .contenedor {
             max-width: 900px;
@@ -43,7 +48,21 @@
             margin: 8px 0;
         }
         .btn {
-            background: #0066cc; color: white; border: none; padding: 10px 15px; cursor: pointer; text-decoration: none;
+            background: #0066cc; 
+            color: white; 
+            border: none; 
+            padding: 10px 15px; 
+            cursor: pointer; 
+            text-decoration: none;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        /* Botón anclado en la esquina inferior derecha */
+        .btn-inicio {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
         }
     </style>
 </head>
@@ -84,8 +103,9 @@
             <div><strong>IVA (16%):</strong> $<span id="iva">{{ iva }}</span></div>
             <div class="total"><strong>Total a Pagar:</strong> $<span id="total">{{ total }}</span></div>
         </div>
-
-        <a href="/" class="btn">← Inicio</a>
     </div>
+
+    <!-- Botón de Inicio anclado en la esquina inferior derecha -->
+    <a href="/" class="btn btn-inicio">← Inicio</a>
 </body>
 </html>
