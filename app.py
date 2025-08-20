@@ -430,6 +430,15 @@ def editar_paciente(folio):
         estudios_asignados=estudios_asignados
     )
 
+@app.route('/descargar_datos/<archivo>')
+def descargar_datos(archivo):
+    import os
+    from flask import send_file
+    ruta = os.path.join('datos', archivo)
+    if os.path.exists(ruta) and archivo in ['pacientes.json', 'precios.json', 'pruebas.json']:
+        return send_file(ruta, as_attachment=True)
+    return "Archivo no encontrado", 404
+
 @app.route('/eliminar_paciente/<folio>')
 def eliminar_paciente(folio):
     pacientes = cargar_datos(RUTA_PACIENTES)
