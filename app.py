@@ -113,10 +113,12 @@ def resumen(folio):
     subtotal = 0
     maquila_matriz = 0
     maquila_sigma = 0
+    materiales = 0
     envio = 0
 
-    # Para evitar duplicar materiales: agrupamos por (id_contenedor, procesado_en)
-    extracciones = set()
+    # Para agrupar extracciones y envíos
+    extracciones = set()  # (id_contenedor, procesado_en)
+    laboratorios_procesados = set()  # 'matriz' o 'sigma'
 
     for estudio in paciente.get('estudios', []):
         clave = estudio['clave']
@@ -141,19 +143,23 @@ def resumen(folio):
             else:
                 maquila_sigma += costo_sigma.get('maquila', 0)
 
-            # Envío
-            envio += costo_matriz.get('envio', 0) + costo_sigma.get('envio', 0)
-
-        # Buscar el id_contenedor de la prueba
+        # === Materiales: agrupar por contenedor y laboratorio ===
         prueba_info = next((p for p in pruebas if p['clave'] == clave), None)
         if prueba_info:
             id_contenedor = prueba_info.get('id_contenedor')
             if id_contenedor:
-                # Agrupamos por (contenedor, laboratorio)
                 extracciones.add((id_contenedor, procesado_en))
 
-    # Calcular materiales: una vez por combinación única de (contenedor, laboratorio)
-    materiales = 0
+        # === Envío: solo una vez por laboratorio ===
+        if procesado_en not in laboratorios_procesados:
+            laboratorios_procesados.add(procesado_en)
+            # Sumar solo UN envío por laboratorio
+            if procesado_en == 'matriz':
+                envio += costo_matriz.get('envio', 0)
+            else:
+                envio += costo_sigma.get('envio', 0)
+
+    # Calcular materiales: una vez por combinación única
     contenedores_dict = {c['id']: c for c in contenedores}
     for id_cont, lab in extracciones:
         cont = contenedores_dict.get(id_cont, {})
