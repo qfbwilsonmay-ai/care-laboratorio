@@ -3,20 +3,47 @@
 <head>
     <title>Pacientes - CARE</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        h1 { color: #0066cc; }
-        .filtros {
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            padding: 0;
+        }
+        h1 { 
+            color: #0066cc; 
+            margin-bottom: 20px; 
+        }
+        .barra-superior {
             display: flex;
             gap: 15px;
             margin-bottom: 20px;
+            padding: 15px;
+            background: #f0f8ff;
+            border: 1px solid #0066cc;
+            border-radius: 8px;
             flex-wrap: wrap;
+            align-items: center;
         }
-        .filtros label { font-weight: bold; }
-        .filtros input, .filtros select {
+        .barra-superior label {
+            font-weight: bold;
+            font-size: 0.9em;
+            white-space: nowrap;
+        }
+        .barra-superior input, 
+        .barra-superior select {
             padding: 8px;
-            width: 180px;
+            width: 160px;
             border: 1px solid #ccc;
             border-radius: 4px;
+            font-size: 0.9em;
+        }
+        .barra-superior .btn {
+            background: #0066cc; 
+            color: white; 
+            padding: 8px 12px; 
+            text-decoration: none; 
+            border-radius: 4px;
+            font-size: 0.9em;
+            white-space: nowrap;
         }
         table {
             width: 100%;
@@ -35,8 +62,14 @@
         tr:nth-child(even) {
             background-color: #f9f9f9;
         }
-        .btn {
-            background: #0066cc; color: white; padding: 8px 12px; text-decoration: none; margin: 2px; display: inline-block; border-radius: 4px;
+        .btn-accion {
+            background: #0066cc; 
+            color: white; 
+            padding: 6px 10px; 
+            text-decoration: none; 
+            border-radius: 4px; 
+            font-size: 0.9em;
+            margin: 0 2px;
         }
         .btn-rojo {
             background: #d9534f;
@@ -46,8 +79,8 @@
 <body>
     <h1>Pacientes Registrados</h1>
 
-    <!-- Filtros -->
-    <div class="filtros">
+    <!-- Barra superior con filtros y botones -->
+    <div class="barra-superior">
         <div>
             <label>Folio</label>
             <input type="text" id="filtroFolio" placeholder="Buscar folio" oninput="filtrarTabla()">
@@ -58,17 +91,22 @@
         </div>
         <div>
             <label>Fecha</label>
-            <input type="date" id="filtroFecha" oninput="filtrarTabla()">
+            <input type="date" id="filtroFecha" oninput="actualizarRango('fecha')">
         </div>
         <div>
             <label>Rango</label>
-            <select id="filtroRango" onchange="filtrarTabla()">
+            <select id="filtroRango" onchange="actualizarRango('rango')">
+                <option value="todo">Todo</option>
                 <option value="dia">Hoy</option>
                 <option value="semana">Esta semana</option>
                 <option value="mes">Este mes</option>
                 <option value="año">Este año</option>
-                <option value="todo">Todo</option>
             </select>
+        </div>
+        <div style="margin-left: auto;">
+            <a href="/registro" class="btn">Registrar Paciente</a>
+            <a href="/admin/pruebas" class="btn">Administrar Pruebas</a>
+            <a href="/admin/precios" class="btn">Administrar Precios</a>
         </div>
     </div>
 
@@ -95,20 +133,15 @@
                 <td>{{ paciente.sexo }}</td>
                 <td>{{ paciente.fecha_registro }}</td>
                 <td>
-                    <a href="/resumen/{{ paciente.folio }}" class="btn">Resumen</a>
-                    <a href="/editar_paciente/{{ paciente.folio }}" class="btn">Editar</a>
-                    <a href="/resultados/{{ paciente.folio }}" class="btn">Resultados</a>
-                    <a href="/eliminar_paciente/{{ paciente.folio }}" class="btn btn-rojo" onclick="return confirm('¿Seguro que deseas eliminar a este paciente?')">Eliminar</a>
+                    <a href="/resumen/{{ paciente.folio }}" class="btn-accion">Resumen</a>
+                    <a href="/editar_paciente/{{ paciente.folio }}" class="btn-accion">Editar</a>
+                    <a href="/resultados/{{ paciente.folio }}" class="btn-accion">Resultados</a>
+                    <a href="/eliminar_paciente/{{ paciente.folio }}" class="btn-accion btn-rojo" onclick="return confirm('¿Seguro que deseas eliminar a este paciente?')">Eliminar</a>
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
-
-    <br>
-    <a href="/registro" class="btn">Registrar Nuevo Paciente</a>
-    <a href="/admin/pruebas" class="btn">Administrar Pruebas</a>
-    <a href="/admin/precios" class="btn">Administrar Precios</a>
 
     <script>
         function filtrarTabla() {
@@ -118,8 +151,10 @@
             const filtroRango = document.getElementById('filtroRango').value;
 
             const hoy = new Date();
-            let fechaInicio, fechaFin;
+            let fechaInicio = null;
+            let fechaFin = null;
 
+            // Calcular rango si está activo
             if (filtroRango === 'dia') {
                 fechaInicio = new Date(hoy.setHours(0, 0, 0, 0));
                 fechaFin = new Date(hoy.setHours(23, 59, 59, 999));
@@ -154,6 +189,7 @@
                 let cumpleNombre = !filtroNombre || nombre.includes(filtroNombre);
                 let cumpleFecha = true;
 
+                // Filtro por fecha específica
                 if (filtroFecha) {
                     const fechaFiltro = new Date(filtroFecha);
                     const diaFiltro = fechaFiltro.getDate();
@@ -165,7 +201,9 @@
                     const añoReg = fechaRegistro.getFullYear();
 
                     cumpleFecha = (diaReg === diaFiltro && mesReg === mesFiltro && añoReg === añoFiltro);
-                } else if (filtroRango !== 'todo') {
+                } 
+                // Filtro por rango
+                else if (filtroRango !== 'todo' && fechaInicio && fechaFin) {
                     cumpleFecha = fechaRegistro >= fechaInicio && fechaRegistro <= fechaFin;
                 }
 
@@ -177,19 +215,15 @@
             });
         }
 
-        // Limpiar filtro de fecha cuando se cambia el rango
-        document.getElementById('filtroRango').addEventListener('change', function() {
-            if (this.value === 'todo') {
-                document.getElementById('filtroFecha').value = '';
-            }
-        });
-
-        // Limpiar rango cuando se usa filtro de fecha específica
-        document.getElementById('filtroFecha').addEventListener('input', function() {
-            if (this.value) {
+        function actualizarRango(tipo) {
+            if (tipo === 'fecha' && document.getElementById('filtroFecha').value) {
                 document.getElementById('filtroRango').value = 'todo';
             }
-        });
+            filtrarTabla();
+        }
+
+        // Llamar al inicio para aplicar filtros iniciales
+        document.addEventListener('DOMContentLoaded', filtrarTabla);
     </script>
 </body>
 </html>
