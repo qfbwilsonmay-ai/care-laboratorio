@@ -14,6 +14,7 @@
         .fila-validada { background-color: #d4edda; } /* Verde claro */
         .fila-normal { background-color: white; }
         .sugerido { font-weight: bold; color: #0066cc; }
+        .iva { color: #d9534f; font-size: 0.9em; }
         .btn { background: #007bff; color: white; padding: 8px 16px; text-decoration: none; margin: 5px; }
     </style>
 </head>
@@ -32,7 +33,9 @@
                 <th>P. Sugerido (Matriz)</th>
                 <th>P. Sugerido (SIGMA)</th>
                 <th>P. Público (Matriz)</th>
+                <th>IVA (16%)</th>
                 <th>P. Público (SIGMA)</th>
+                <th>IVA (16%)</th>
                 <th>Acciones</th>
             </tr>
             <tr>
@@ -43,6 +46,9 @@
                 <th>Maquila</th>
                 <th>Materiales</th>
                 <th>Envío</th>
+                <th></th>
+                <th></th>
+                <th></th>
                 <th></th>
                 <th></th>
                 <th></th>
@@ -84,9 +90,17 @@
                     {{ "%.2f"|format(precio.precio_sugerido_sigma if precio.precio_sugerido_sigma else 0) }}
                 </td>
                 <!-- Precio Público (Matriz) -->
-                <td><input type="number" step="0.01" name="precio_publico_matriz_{{ loop.index }}" value="{{ precio.precio_publico_matriz if precio.precio_publico_matriz else 0 }}" required {{ 'readonly' if validado else '' }}></td>
+                <td><input type="number" step="0.01" name="precio_publico_matriz_{{ loop.index }}" value="{{ precio.precio_publico_matriz if precio.precio_publico_matriz else 0 }}" required {{ 'readonly' if validado else '' }} onchange="calcularIVA(this, 'iva_matriz_{{ loop.index }}')"></td>
+                <!-- IVA Matriz -->
+                <td class="iva" id="iva_matriz_{{ loop.index }}">
+                    {{ "%.2f"|format((precio.precio_publico_matriz - precio.precio_publico_matriz / 1.16) if precio.precio_publico_matriz else 0) }}
+                </td>
                 <!-- Precio Público (SIGMA) -->
-                <td><input type="number" step="0.01" name="precio_publico_sigma_{{ loop.index }}" value="{{ precio.precio_publico_sigma if precio.precio_publico_sigma else 0 }}" required {{ 'readonly' if validado else '' }}></td>
+                <td><input type="number" step="0.01" name="precio_publico_sigma_{{ loop.index }}" value="{{ precio.precio_publico_sigma if precio.precio_publico_sigma else 0 }}" required {{ 'readonly' if validado else '' }} onchange="calcularIVA(this, 'iva_sigma_{{ loop.index }}')"></td>
+                <!-- IVA SIGMA -->
+                <td class="iva" id="iva_sigma_{{ loop.index }}">
+                    {{ "%.2f"|format((precio.precio_publico_sigma - precio.precio_publico_sigma / 1.16) if precio.precio_publico_sigma else 0) }}
+                </td>
                 <!-- Acciones -->
                 <td>
                     {% if validado %}
@@ -150,6 +164,13 @@
                 `<button type="button" class="btn-validar" onclick="validarFila(${idx})">Validar</button>`;
         }
 
+        // Calcular IVA a partir del precio público (con IVA incluido)
+        function calcularIVA(input, idIVA) {
+            const precioFinal = parseFloat(input.value) || 0;
+            const iva = precioFinal - (precioFinal / 1.16);
+            document.getElementById(idIVA).textContent = iva.toFixed(2);
+        }
+
         // Escuchar cambios en costos y ganancia
         document.querySelectorAll('.costo, .ganancia').forEach(input => {
             input.addEventListener('input', function() {
@@ -162,6 +183,14 @@
         document.querySelectorAll('.costo').forEach(input => {
             const idx = input.getAttribute('data-idx');
             calcularSugeridos(idx);
+        });
+
+        // Calcular IVA inicial
+        document.querySelectorAll('[name^="precio_publico_"]').forEach(input => {
+            const idx = input.name.split('_')[3];
+            const isMatriz = input.name.includes('matriz');
+            const idIVA = isMatriz ? `iva_matriz_${idx}` : `iva_sigma_${idx}`;
+            calcularIVA(input, idIVA);
         });
     </script>
 </body>
