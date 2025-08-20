@@ -231,7 +231,6 @@
             {% for estudio in estudios_asignados %}
             const liExistente = document.createElement('li');
             const labText = "{{ estudio.procesado_en|upper }}";
-            const clave = "{{ estudio.clave }}";
             liExistente.textContent = `{{ estudio.nombre }} (${labText}) - ${{ estudio.precio }}`;
             const eliminar = document.createElement('span');
             eliminar.textContent = " ×";
