@@ -151,7 +151,7 @@
             <div class="right-column">
                 <h4>Estudios asignados</h4>
                 <ul id="lista-seleccionados">
-                    <!-- Aquí se muestran los estudios ya agregados -->
+                    <!-- Aquí se llenan los estudios existentes y nuevos -->
                 </ul>
 
                 <div class="resumen">
@@ -231,7 +231,6 @@
             {% for estudio in estudios_asignados %}
             const liExistente = document.createElement('li');
             const labText = "{{ estudio.procesado_en|upper }}";
-            const clave = "{{ estudio.clave }}";
             liExistente.textContent = `{{ estudio.nombre }} (${labText}) - ${{ estudio.precio }}`;
             const eliminar = document.createElement('span');
             eliminar.textContent = " ×";
