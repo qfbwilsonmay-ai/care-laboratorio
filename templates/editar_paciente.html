@@ -231,6 +231,7 @@
             {% for estudio in estudios_asignados %}
             const liExistente = document.createElement('li');
             const labText = "{{ estudio.procesado_en|upper }}";
+            const clave = "{{ estudio.clave }}";
             liExistente.textContent = `{{ estudio.nombre }} (${labText}) - ${{ estudio.precio }}`;
             const eliminar = document.createElement('span');
             eliminar.textContent = " ×";
@@ -243,7 +244,7 @@
             };
             liExistente.appendChild(eliminar);
             lista.appendChild(liExistente);
-            // No sumamos aquí el precio, lo hacemos en actualizarResumen
+            subtotal += parseFloat("{{ estudio.precio }}");
             {% endfor %}
 
             // Añadir nuevos seleccionados
@@ -252,21 +253,12 @@
                 const label = document.querySelector(`label[for="${checkbox.id}"]`).innerText;
                 const laboratorio = document.querySelector(`#lab_${clave}`).value;
                 const precio = preciosData[clave][laboratorio] || 0;
+                subtotal += precio;
 
                 const labText = laboratorio === 'matriz' ? 'Matriz' : 'SIGMA';
                 const li = document.createElement('li');
                 li.textContent = `${label} (${labText}) - $${precio}`;
                 lista.appendChild(li);
-                subtotal += precio;
-            });
-
-            // Sumar solo los existentes que no han sido eliminados
-            document.querySelectorAll('#lista-seleccionados li').forEach(li => {
-                const text = li.textContent;
-                const match = text.match(/\$(\d+(\.\d+)?)/);
-                if (match) {
-                    subtotal += parseFloat(match[1]);
-                }
             });
 
             const iva = subtotal * 0.16;

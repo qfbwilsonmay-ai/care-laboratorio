@@ -1,46 +1,90 @@
 [
-  {
-    "tipo": "prueba",
-    "id_elemento": "GLU",
-    "costos": {
-      "matriz": {
-        "maquila": 0,
-        "materiales": 40,
-        "envio": 0
-      },
-      "sigma": {
-        "maquila": 60,
-        "materiales": 0,
-        "envio": 15
-      }
+    {
+        "tipo": "prueba",
+        "id_elemento": "GLU",
+        "costos": {
+            "matriz": {
+                "maquila": 30.0,
+                "materiales": 10.0,
+                "envio": 10.0
+            },
+            "sigma": {
+                "maquila": 35.0,
+                "materiales": 10.0,
+                "envio": 10.0
+            }
+        },
+        "ganancia_porcentaje": 50.0,
+        "precio_sugerido_matriz": 75.0,
+        "precio_sugerido_sigma": 82.5,
+        "precio_publico_matriz": 75.0,
+        "precio_publico_sigma": 85.0,
+        "validado": true
     },
-    "ganancia_porcentaje": 50,
-    "precio_sugerido_matriz": 60,
-    "precio_sugerido_sigma": 112.5,
-    "precio_publico_matriz": 120,
-    "precio_publico_sigma": 130,
-    "validado": false
-  },
-  {
-    "tipo": "prueba",
-    "id_elemento": "HEM",
-    "costos": {
-      "matriz": {
-        "maquila": 0,
-        "materiales": 50,
-        "envio": 0
-      },
-      "sigma": {
-        "maquila": 70,
-        "materiales": 0,
-        "envio": 15
-      }
+    {
+        "tipo": "prueba",
+        "id_elemento": "HEM",
+        "costos": {
+            "matriz": {
+                "maquila": 22.0,
+                "materiales": 10.0,
+                "envio": 10.0
+            },
+            "sigma": {
+                "maquila": 35.0,
+                "materiales": 10.0,
+                "envio": 10.0
+            }
+        },
+        "ganancia_porcentaje": 50.0,
+        "precio_sugerido_matriz": 63.0,
+        "precio_sugerido_sigma": 82.5,
+        "precio_publico_matriz": 100.0,
+        "precio_publico_sigma": 120.0,
+        "validado": true
     },
-    "ganancia_porcentaje": 50,
-    "precio_sugerido_matriz": 75,
-    "precio_sugerido_sigma": 127.5,
-    "precio_publico_matriz": 180,
-    "precio_publico_sigma": 190,
-    "validado": false
-  }
+    {
+        "tipo": "prueba",
+        "id_elemento": "EGO",
+        "costos": {
+            "matriz": {
+                "maquila": 20.0,
+                "materiales": 10.0,
+                "envio": 10.0
+            },
+            "sigma": {
+                "maquila": 35.0,
+                "materiales": 10.0,
+                "envio": 10.0
+            }
+        },
+        "ganancia_porcentaje": 50.0,
+        "precio_sugerido_matriz": 60.0,
+        "precio_sugerido_sigma": 82.5,
+        "precio_publico_matriz": 100.0,
+        "precio_publico_sigma": 120.0,
+        "validado": true
+    },
+    {
+        "tipo": "prueba",
+        "id_elemento": "GRP",
+        "costos": {
+            "matriz": {
+                "maquila": 30.0,
+                "materiales": 5.0,
+                "envio": 0.0
+            },
+            "sigma": {
+                "maquila": 55.0,
+                "materiales": 10.0,
+                "envio": 10.0
+            }
+        },
+        "ganancia_porcentaje": 50.0,
+        "precio_sugerido_matriz": 52.5,
+        "precio_sugerido_sigma": 112.5,
+        "precio_publico_matriz": 100.0,
+        "precio_publico_sigma": 120.0,
+        "validado": true
+    }
 ]

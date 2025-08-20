@@ -1,58 +1,38 @@
 [
-  {
-    "clave": "GLU",
-    "nombre": "Glucosa",
-    "tipo_muestra": "suero",
-    "id_contenedor": 1,
-    "procesado_en": "matriz"
-  },
-  {
-    "clave": "CRE",
-    "nombre": "Creatinina",
-    "tipo_muestra": "suero",
-    "id_contenedor": 1,
-    "procesado_en": "matriz"
-  },
-  {
-    "clave": "HEM",
-    "nombre": "Hemograma Completo",
-    "tipo_muestra": "sangre total",
-    "id_contenedor": 2,
-    "procesado_en": "matriz"
-  },
-  {
-    "clave": "URO",
-    "nombre": "Examen General de Orina",
-    "tipo_muestra": "orina",
-    "id_contenedor": 5,
-    "procesado_en": "matriz"
-  },
-  {
-    "clave": "GRP",
-    "nombre": "Grupo Sanguíneo",
-    "tipo_muestra": "sangre",
-    "id_contenedor": 1,
-    "procesado_en": "matriz"
-  },
-  {
-    "clave": "EMB",
-    "nombre": "Prueba Rápida de Embarazo",
-    "tipo_muestra": "orina",
-    "id_contenedor": 5,
-    "procesado_en": "matriz"
-  },
-  {
-    "clave": "TGO",
-    "nombre": "TGO",
-    "tipo_muestra": "suero",
-    "id_contenedor": 1,
-    "procesado_en": "sigma"
-  },
-  {
-    "clave": "TGP",
-    "nombre": "TGP",
-    "tipo_muestra": "suero",
-    "id_contenedor": 1,
-    "procesado_en": "sigma"
-  }
+    {
+        "clave": "GLU",
+        "nombre": "Glucosa",
+        "tipo_muestra": "suero",
+        "id_contenedor": 1,
+        "unidad": "mg/dL",
+        "valores_normales": "70-105",
+        "tipo": "cuantitativa"
+    },
+    {
+        "clave": "HEM",
+        "nombre": "Hemograma Completo",
+        "tipo_muestra": "sangre total",
+        "id_contenedor": 2,
+        "unidad": "NO APLICA",
+        "valores_normales": "NO APLICA",
+        "tipo": "cuantitativa"
+    },
+    {
+        "clave": "EGO",
+        "nombre": "Examen General de Orina",
+        "tipo_muestra": "orina",
+        "id_contenedor": 5,
+        "unidad": "NO APLICA",
+        "valores_normales": "NO APLICA",
+        "tipo": "cuantitativa"
+    },
+    {
+        "clave": "GRP",
+        "nombre": "Grupo Sanguíneo",
+        "tipo_muestra": "sangre total",
+        "id_contenedor": 2,
+        "unidad": "NO APLICA",
+        "valores_normales": "NO APLICA",
+        "tipo": "cuantitativa"
+    }
 ]
