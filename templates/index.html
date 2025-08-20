@@ -183,7 +183,10 @@
                 const folio = fila.getAttribute('data-folio');
                 const nombre = fila.getAttribute('data-nombre');
                 const fechaStr = fila.getAttribute('data-fecha');
-                const fechaRegistro = new Date(fechaStr);
+                
+                // Extraer solo la fecha (YYYY-MM-DD) del string con hora
+                const fechaPartes = fechaStr.split(' ')[0];
+                const fechaRegistro = new Date(fechaPartes);
 
                 let cumpleFolio = !filtroFolio || folio.includes(filtroFolio);
                 let cumpleNombre = !filtroNombre || nombre.includes(filtroNombre);
