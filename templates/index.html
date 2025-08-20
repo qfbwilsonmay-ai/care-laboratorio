@@ -7,10 +7,28 @@
             font-family: Arial, sans-serif; 
             margin: 20px; 
             padding: 0;
+            background: #f5f5f5;
         }
-        h1 { 
-            color: #0066cc; 
-            margin-bottom: 20px; 
+        .encabezado {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .encabezado h1 {
+            margin: 10px 0;
+            color: #0066cc;
+            font-size: 1.8em;
+        }
+        .encabezado img {
+            width: 120px;
+            height: auto;
+            margin: 0 auto 10px;
+            border: 2px solid #0066cc;
+            border-radius: 8px;
         }
         .barra-superior {
             display: flex;
@@ -49,6 +67,11 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         th, td {
             padding: 12px;
@@ -77,7 +100,12 @@
     </style>
 </head>
 <body>
-    <h1>Pacientes Registrados</h1>
+    <!-- Encabezado con logo y nombre del laboratorio -->
+    <div class="encabezado">
+        <!-- Reemplaza la URL con la de tu logo real cuando lo tengas -->
+        <img src="/static/logo.png" alt="Logo Laboratorio CARE">
+        <h1>Laboratorio CARE</h1>
+    </div>
 
     <!-- Barra superior con filtros y botones -->
     <div class="barra-superior">
@@ -188,8 +216,8 @@
                 const fechaPartes = fechaStr.split(' ')[0];
                 const fechaRegistro = new Date(fechaPartes);
 
-                let cumpleFolio = !filtroFolio || folio.includes(filtroFolio);
-                let cumpleNombre = !filtroNombre || nombre.includes(filtroNombre);
+                let cumpleFolio = !filtroFolio || folio.includes(folio);
+                let cumpleNombre = !filtroNombre || nombre.includes(nombre);
                 let cumpleFecha = true;
 
                 // Filtro por fecha específica
