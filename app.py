@@ -37,21 +37,29 @@ def index():
 def registro():
     if request.method == 'POST':
         nombre = request.form['nombre']
-        nombre = request.form['nombre']
-fecha_nac = request.form.get('fecha_nac')  # Usa .get() por si no existe
-sexo = request.form['sexo']
-diagnostico = request.form['diagnostico']
-medico = request.form['medico']
+        fecha_nac = request.form.get('fecha_nac')  # Usa .get() por si no existe
+        sexo = request.form['sexo']
+        diagnostico = request.form['diagnostico']
+        medico = request.form['medico']
 
-# Calcular edad: si hay fecha de nacimiento, calcular con ella; si no, usar edad manual
-if fecha_nac and fecha_nac.strip():
-    edad = calcular_edad(fecha_nac)
-else:
-    edad_manual = request.form.get('edad_manual', '').strip()
-    if edad_manual.isdigit():
-        edad = int(edad_manual)
-    else:
-        edad = 0  # o podrías mostrar un error, pero no romper
+        pruebas_seleccionadas = request.form.getlist('pruebas')
+        laboratorios = {}
+        for clave in pruebas_seleccionadas:
+            lab = request.form.get(f'laboratorio_{clave}', 'matriz')
+            laboratorios[clave] = lab
+
+        folio = generar_folio()
+
+        # Calcular edad: si hay fecha de nacimiento, calcular con ella
+        if fecha_nac and fecha_nac.strip():
+            edad = calcular_edad(fecha_nac)
+        else:
+            # Si no, usar edad manual
+            edad_manual = request.form.get('edad_manual', '').strip()
+            if edad_manual.isdigit():
+                edad = int(edad_manual)
+            else:
+                edad = 0  # O podrías mostrar un error, pero no romper
 
         pruebas, contenedores, _, precios_dict = cargar_catalogos()
 
@@ -79,7 +87,7 @@ else:
             "folio": folio,
             "nombre": nombre,
             "fecha_nacimiento": fecha_nac,
-            "edad": int(edad) if edad else 0,
+            "edad": edad,
             "sexo": sexo,
             "diagnostico": diagnostico,
             "medico": medico,
@@ -116,11 +124,12 @@ def resumen(folio):
     maquila_matriz = 0
     maquila_sigma = 0
     materiales = 0
-    envio = 0
 
-    # Para agrupar extracciones y envíos
-    extracciones = set()  # (id_contenedor, procesado_en)
-    laboratorios_procesados = set()  # 'matriz' o 'sigma'
+    # Para envío: solo una vez por laboratorio
+    laboratorios_con_envio = set()
+
+    # Para materiales: agrupar por (contenedor, laboratorio)
+    extracciones = set()
 
     for estudio in paciente.get('estudios', []):
         clave = estudio['clave']
@@ -145,21 +154,15 @@ def resumen(folio):
             else:
                 maquila_sigma += costo_sigma.get('maquila', 0)
 
-        # === Materiales: agrupar por contenedor y laboratorio ===
+            # Registrar que este laboratorio tiene envío
+            laboratorios_con_envio.add(procesado_en)
+
+        # Buscar el id_contenedor de la prueba
         prueba_info = next((p for p in pruebas if p['clave'] == clave), None)
         if prueba_info:
             id_contenedor = prueba_info.get('id_contenedor')
             if id_contenedor:
                 extracciones.add((id_contenedor, procesado_en))
-
-        # === Envío: solo una vez por laboratorio ===
-        if procesado_en not in laboratorios_procesados:
-            laboratorios_procesados.add(procesado_en)
-            # Sumar solo UN envío por laboratorio
-            if procesado_en == 'matriz':
-                envio += costo_matriz.get('envio', 0)
-            else:
-                envio += costo_sigma.get('envio', 0)
 
     # Calcular materiales: una vez por combinación única
     contenedores_dict = {c['id']: c for c in contenedores}
@@ -177,6 +180,17 @@ def resumen(folio):
                     mat = costo.get('materiales', 0)
                     break
         materiales += mat
+
+    # Calcular envío: una vez por laboratorio
+    envio = 0
+    for laboratorio in laboratorios_con_envio:
+        for estudio in paciente.get('estudios', []):
+            clave = estudio['clave']
+            precio_data = precios_dict.get(f"prueba_{clave}")
+            if precio_data:
+                costo = precio_data.get('costos', {}).get(laboratorio, {})
+                envio += costo.get('envio', 0)
+            break
 
     total_maquila = maquila_matriz + maquila_sigma
     ganancia = subtotal - (total_maquila + materiales + envio)
