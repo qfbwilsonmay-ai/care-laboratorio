@@ -120,7 +120,7 @@ def resumen(folio):
         clave = estudio['clave']
         procesado_en = estudio.get('procesado_en', 'matriz')
         
-        # Precio público
+        # === Precio público (con IVA incluido) ===
         precio_data = precios_dict.get(f"prueba_{clave}")
         if precio_data:
             if procesado_en == 'sigma':
@@ -129,19 +129,21 @@ def resumen(folio):
                 precio_publico = precio_data.get('precio_publico_matriz', 0)
             subtotal += precio_publico
 
-        # Costos detallados
-        costo_matriz = precio_data.get('costos', {}).get('matriz', {}) if precio_data else {}
-        costo_sigma = precio_data.get('costos', {}).get('sigma', {}) if precio_data else {}
+            # === Costos directos, sin sumas extras ===
+            costo_matriz = precio_data.get('costos', {}).get('matriz', {})
+            costo_sigma = precio_data.get('costos', {}).get('sigma', {})
 
-        # Solo el costo de "maquila" (sin materiales ni envío)
-        maquila_matriz += costo_matriz.get('maquila', 0)
-        maquila_sigma += costo_sigma.get('maquila', 0)
+            # Solo el valor de "maquila" según donde se procese
+            if procesado_en == 'matriz':
+                maquila_matriz += costo_matriz.get('maquila', 0)
+            else:
+                maquila_sigma += costo_sigma.get('maquila', 0)
 
-        # Materiales: suma de ambos
-        materiales += costo_matriz.get('materiales', 0) + costo_sigma.get('materiales', 0)
+            # Materiales: suma de ambos (solo el valor en la columna)
+            materiales += costo_matriz.get('materiales', 0) + costo_sigma.get('materiales', 0)
 
-        # Envío: suma de ambos
-        envio += costo_matriz.get('envio', 0) + costo_sigma.get('envio', 0)
+            # Envío: suma de ambos (solo el valor en la columna)
+            envio += costo_matriz.get('envio', 0) + costo_sigma.get('envio', 0)
 
     total_maquila = maquila_matriz + maquila_sigma
     ganancia = subtotal - (total_maquila + materiales + envio)
