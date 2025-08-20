@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Registrar Paciente - CARE</title>
+    <title>Editar Paciente - CARE</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         .container { display: flex; gap: 20px; }
@@ -79,18 +79,24 @@
         .resumen div {
             margin: 8px 0;
         }
+        .eliminar-estudio {
+            color: #d9534f;
+            font-weight: bold;
+            cursor: pointer;
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
-    <h1>Registrar Paciente</h1>
+    <h1>Editar Paciente</h1>
     <form method="POST" id="registroForm">
         <div class="container">
             <div class="left-column">
                 <label>Nombre completo:</label>
-                <input type="text" name="nombre" required>
+                <input type="text" name="nombre" value="{{ paciente.nombre }}" required>
 
                 <label>Fecha de nacimiento (AAAA-MM-DD):</label>
-                <input type="date" name="fecha_nac" id="fecha_nac">
+                <input type="date" name="fecha_nac" id="fecha_nac" value="{{ paciente.fecha_nacimiento }}">
 
                 <div>
                     <input type="checkbox" id="usar_edad_manual" onchange="toggleEdad()">
@@ -98,20 +104,22 @@
                 </div>
 
                 <label>Edad:</label>
-                <input type="number" name="edad_manual" id="edad_manual" disabled>
+                <input type="number" name="edad_manual" id="edad_manual" 
+                       value="{{ paciente.edad if paciente.edad else '' }}" 
+                       disabled>
 
                 <label>Sexo:</label>
                 <select name="sexo" required>
-                    <option value="M">Hombre</option>
-                    <option value="F">Mujer</option>
-                    <option value="O">Otro</option>
+                    <option value="M" {% if paciente.sexo == 'M' %}selected{% endif %}>Hombre</option>
+                    <option value="F" {% if paciente.sexo == 'F' %}selected{% endif %}>Mujer</option>
+                    <option value="O" {% if paciente.sexo == 'O' %}selected{% endif %}>Otro</option>
                 </select>
 
-                <label>Diagnóstico (opcional):</label>
-                <input type="text" name="diagnostico">
+                <label>Diagnóstico:</label>
+                <input type="text" name="diagnostico" value="{{ paciente.diagnostico }}">
 
                 <label>Médico solicitante:</label>
-                <input type="text" name="medico" required>
+                <input type="text" name="medico" value="{{ paciente.medico }}" required>
 
                 <h3>Buscar estudios a realizar</h3>
                 <input type="text" id="buscador" class="buscador" placeholder="Escribe para buscar pruebas..." onkeyup="buscarPruebas()">
@@ -119,12 +127,12 @@
                 <div id="lista-pruebas">
                     {% for p in pruebas %}
                     <div class="prueba-item" data-nombre="{{ p.nombre|lower }}" data-clave="{{ p.clave|lower }}">
-                        <input type="checkbox" name="pruebas" value="{{ p.clave }}" id="prueba_{{ p.clave }}" onchange="actualizarSeleccionados()">
+                        <input type="checkbox" name="nuevos_estudios" value="{{ p.clave }}" id="prueba_{{ p.clave }}" onchange="actualizarSeleccionados()">
                         <label for="prueba_{{ p.clave }}"><strong>{{ p.nombre }}</strong></label>
                         
                         <div style="margin-left: 20px; font-size: 0.9em;">
                             <label>Procesar en:</label>
-                            <select name="laboratorio_{{ p.clave }}" id="lab_{{ p.clave }}" onchange="actualizarPrecio('{{ p.clave }}')">
+                            <select name="laboratorio_nuevo_{{ p.clave }}" id="lab_{{ p.clave }}" onchange="actualizarPrecio('{{ p.clave }}')">
                                 <option value="matriz">Matriz (CARE)</option>
                                 <option value="sigma">SIGMA (maquila)</option>
                             </select>
@@ -141,9 +149,9 @@
             </div>
 
             <div class="right-column">
-                <h4>Estudios seleccionados</h4>
+                <h4>Estudios asignados</h4>
                 <ul id="lista-seleccionados">
-                    <li>(Ninguno aún)</li>
+                    <!-- Aquí se muestran los estudios ya agregados -->
                 </ul>
 
                 <div class="resumen">
@@ -158,7 +166,7 @@
     </form>
 
     <!-- Botón anclado funcional -->
-    <button type="submit" form="registroForm" class="btn-anclado">Registrar Paciente</button>
+    <button type="submit" form="registroForm" class="btn-anclado">Guardar Cambios</button>
 
     <script>
         function toggleEdad() {
@@ -166,6 +174,16 @@
             document.getElementById('fecha_nac').disabled = usarManual;
             document.getElementById('edad_manual').disabled = !usarManual;
         }
+
+        // Inicializar estado del checkbox de edad
+        window.addEventListener('DOMContentLoaded', () => {
+            const fechaInput = document.getElementById('fecha_nac');
+            const manualInput = document.getElementById('edad_manual');
+            if (!fechaInput.value) {
+                document.getElementById('usar_edad_manual').checked = true;
+                toggleEdad();
+            }
+        });
 
         function buscarPruebas() {
             const input = document.getElementById('buscador');
@@ -184,7 +202,7 @@
             actualizarSeleccionados();
         }
 
-        // Precios desde el backend (inyectados en JSON)
+        // Precios desde el backend
         const preciosData = {
             {% for p in pruebas %}
             "{{ p.clave }}": {
@@ -202,20 +220,39 @@
         }
 
         function actualizarSeleccionados() {
-            const checkboxes = document.querySelectorAll('input[name="pruebas"]:checked');
+            const checkboxes = document.querySelectorAll('input[name="nuevos_estudios"]:checked');
             const lista = document.getElementById('lista-seleccionados');
             let subtotal = 0;
 
-            if (checkboxes.length === 0) {
-                lista.innerHTML = '<li>(Ninguno aún)</li>';
-                document.getElementById('subtotal').textContent = '0';
-                document.getElementById('iva').textContent = '0';
-                document.getElementById('total').textContent = '0';
-                return;
-            }
-
+            // Limpiar lista
             lista.innerHTML = '';
 
+            // Añadir estudios ya existentes (con eliminación)
+            {% for estudio in estudios_asignados %}
+            const liExistente = document.createElement('li');
+            const labText = "{{ estudio.procesado_en|upper }}";
+            const clave = "{{ estudio.clave }}";
+            liExistente.textContent = `{{ estudio.nombre }} (${labText}) - ${{ estudio.precio }}`;
+            const eliminar = document.createElement('span');
+            eliminar.textContent = " ×";
+            eliminar.className = "eliminar-estudio";
+            eliminar.onclick = function() {
+                if (confirm('¿Eliminar este estudio?')) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'eliminar_{{ estudio.clave }}';
+                    input.value = '1';
+                    document.getElementById('registroForm').appendChild(input);
+                    liExistente.remove();
+                    actualizarResumen();
+                }
+            };
+            liExistente.appendChild(eliminar);
+            lista.appendChild(liExistente);
+            subtotal += parseFloat("{{ estudio.precio }}");
+            {% endfor %}
+
+            // Añadir nuevos seleccionados
             checkboxes.forEach(checkbox => {
                 const clave = checkbox.value;
                 const label = document.querySelector(`label[for="${checkbox.id}"]`).innerText;
@@ -237,6 +274,7 @@
             document.getElementById('total').textContent = total.toFixed(2);
         }
 
+        // Inicializar
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
                 const allPruebas = document.querySelectorAll('.prueba-item');
