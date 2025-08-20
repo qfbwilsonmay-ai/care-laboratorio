@@ -37,19 +37,21 @@ def index():
 def registro():
     if request.method == 'POST':
         nombre = request.form['nombre']
-        fecha_nac = request.form['fecha_nac']
-        sexo = request.form['sexo']
-        diagnostico = request.form['diagnostico']
-        medico = request.form['medico']
+        nombre = request.form['nombre']
+fecha_nac = request.form.get('fecha_nac')  # Usa .get() por si no existe
+sexo = request.form['sexo']
+diagnostico = request.form['diagnostico']
+medico = request.form['medico']
 
-        pruebas_seleccionadas = request.form.getlist('pruebas')
-        laboratorios = {}
-        for clave in pruebas_seleccionadas:
-            lab = request.form.get(f'laboratorio_{clave}', 'matriz')
-            laboratorios[clave] = lab
-
-        folio = generar_folio()
-        edad = calcular_edad(fecha_nac) if fecha_nac else request.form.get('edad_manual', 0)
+# Calcular edad: si hay fecha de nacimiento, calcular con ella; si no, usar edad manual
+if fecha_nac and fecha_nac.strip():
+    edad = calcular_edad(fecha_nac)
+else:
+    edad_manual = request.form.get('edad_manual', '').strip()
+    if edad_manual.isdigit():
+        edad = int(edad_manual)
+    else:
+        edad = 0  # o podrías mostrar un error, pero no romper
 
         pruebas, contenedores, _, precios_dict = cargar_catalogos()
 
