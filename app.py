@@ -361,9 +361,9 @@ def editar_paciente(folio):
         return "Paciente no encontrado", 404
 
     if request.method == 'POST':
-        # Actualizar datos del paciente
+        # Actualizar datos básicos
         paciente['nombre'] = request.form['nombre']
-        paciente['fecha_nacimiento'] = request.form['fecha_nac']
+        paciente['fecha_nacimiento'] = request.form.get('fecha_nac', '')
         paciente['sexo'] = request.form['sexo']
         paciente['diagnostico'] = request.form['diagnostico']
         paciente['medico'] = request.form['medico']
@@ -371,8 +371,12 @@ def editar_paciente(folio):
         # Calcular edad
         if paciente['fecha_nacimiento']:
             paciente['edad'] = calcular_edad(paciente['fecha_nacimiento'])
-        elif request.form.get('edad_manual'):
-            paciente['edad'] = int(request.form['edad_manual'])
+        else:
+            edad_manual = request.form.get('edad_manual', '').strip()
+            if edad_manual.isdigit():
+                paciente['edad'] = int(edad_manual)
+            else:
+                paciente['edad'] = 0
 
         # Procesar nuevos estudios
         nuevos_estudios_claves = request.form.getlist('nuevos_estudios')
@@ -410,12 +414,11 @@ def editar_paciente(folio):
             paciente['estudios'] = []
         paciente['estudios'].extend(nuevos_estudios)
 
-        # Eliminar estudios
+        # Eliminar estudios: recorrer los existentes y verificar si se marcó para eliminar
         estudios_a_mantener = []
         for estudio in paciente['estudios']:
-            # Verificar si se marcó para eliminar
-            eliminar_key = f"eliminar_{estudio['clave']}"
-            if eliminar_key not in request.form:
+            # Verificar si hay un campo 'eliminar_<clave>' en el formulario
+            if f"eliminar_{estudio['clave']}" not in request.form:
                 estudios_a_mantener.append(estudio)
         paciente['estudios'] = estudios_a_mantener
 
