@@ -361,17 +361,20 @@ def editar_paciente(folio):
         return "Paciente no encontrado", 404
 
     if request.method == 'POST':
+        # Actualizar datos del paciente
         paciente['nombre'] = request.form['nombre']
         paciente['fecha_nacimiento'] = request.form['fecha_nac']
         paciente['sexo'] = request.form['sexo']
         paciente['diagnostico'] = request.form['diagnostico']
         paciente['medico'] = request.form['medico']
 
+        # Calcular edad
         if paciente['fecha_nacimiento']:
             paciente['edad'] = calcular_edad(paciente['fecha_nacimiento'])
         elif request.form.get('edad_manual'):
             paciente['edad'] = int(request.form['edad_manual'])
 
+        # Procesar nuevos estudios
         nuevos_estudios_claves = request.form.getlist('nuevos_estudios')
         laboratorios = {}
         for clave in nuevos_estudios_claves:
@@ -387,7 +390,7 @@ def editar_paciente(folio):
                 prueba = next((p for p in pruebas if p['clave'] == clave), None)
                 if prueba:
                     precio_data = precios_dict.get(f"prueba_{clave}")
-                    if not precio_:
+                    if not precio_data:
                         precio_final = 0
                     else:
                         if laboratorios[clave] == 'sigma':
@@ -402,25 +405,28 @@ def editar_paciente(folio):
                         "procesado_en": laboratorios[clave]
                     })
 
+        # Añadir nuevos estudios
         if 'estudios' not in paciente:
             paciente['estudios'] = []
         paciente['estudios'].extend(nuevos_estudios)
 
+        # Eliminar estudios
         estudios_a_mantener = []
         for estudio in paciente['estudios']:
-            if f"eliminar_{estudio['clave']}" not in request.form:
+            # Verificar si se marcó para eliminar
+            eliminar_key = f"eliminar_{estudio['clave']}"
+            if eliminar_key not in request.form:
                 estudios_a_mantener.append(estudio)
         paciente['estudios'] = estudios_a_mantener
 
+        # Guardar cambios
         guardar_datos(RUTA_PACIENTES, pacientes)
         return redirect(url_for('index'))
 
+    # GET: Mostrar formulario
     pruebas, contenedores, _, precios_dict = cargar_catalogos()
-
-    # Aseguramos que el paciente tenga la lista de estudios
     estudios_asignados = paciente.get('estudios', [])
 
-    # Pruebas disponibles (no repetidas)
     claves_asignadas = [e['clave'] for e in estudios_asignados]
     pruebas_disponibles = [p for p in pruebas if p['clave'] not in claves_asignadas]
 
@@ -430,7 +436,7 @@ def editar_paciente(folio):
         pruebas=pruebas_disponibles,
         contenedores=contenedores,
         precios_dict=precios_dict,
-        estudios_asignados=estudios_asignados  # ← Esta línea es clave
+        estudios_asignados=estudios_asignados
     )
 
 @app.route('/descargar_datos/<archivo>')
