@@ -387,7 +387,7 @@ def editar_paciente(folio):
                 prueba = next((p for p in pruebas if p['clave'] == clave), None)
                 if prueba:
                     precio_data = precios_dict.get(f"prueba_{clave}")
-                    if not precio_data:
+                    if not precio_:
                         precio_final = 0
                     else:
                         if laboratorios[clave] == 'sigma':
@@ -417,8 +417,11 @@ def editar_paciente(folio):
 
     pruebas, contenedores, _, precios_dict = cargar_catalogos()
 
-    claves_asignadas = [e['clave'] for e in paciente.get('estudios', [])]
+    # Aseguramos que el paciente tenga la lista de estudios
     estudios_asignados = paciente.get('estudios', [])
+
+    # Pruebas disponibles (no repetidas)
+    claves_asignadas = [e['clave'] for e in estudios_asignados]
     pruebas_disponibles = [p for p in pruebas if p['clave'] not in claves_asignadas]
 
     return render_template(
@@ -427,7 +430,7 @@ def editar_paciente(folio):
         pruebas=pruebas_disponibles,
         contenedores=contenedores,
         precios_dict=precios_dict,
-        estudios_asignados=estudios_asignados
+        estudios_asignados=estudios_asignados  # ← Esta línea es clave
     )
 
 @app.route('/descargar_datos/<archivo>')
