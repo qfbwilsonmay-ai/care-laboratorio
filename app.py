@@ -414,10 +414,9 @@ def editar_paciente(folio):
             paciente['estudios'] = []
         paciente['estudios'].extend(nuevos_estudios)
 
-        # Eliminar estudios: recorrer los existentes y verificar si se marcó para eliminar
+        # Eliminar estudios
         estudios_a_mantener = []
         for estudio in paciente['estudios']:
-            # Verificar si hay un campo 'eliminar_<clave>' en el formulario
             if f"eliminar_{estudio['clave']}" not in request.form:
                 estudios_a_mantener.append(estudio)
         paciente['estudios'] = estudios_a_mantener
