@@ -398,7 +398,7 @@ def editar_paciente(folio):
                 prueba = next((p for p in pruebas if p['clave'] == clave), None)
                 if prueba:
                     precio_data = precios_dict.get(f"prueba_{clave}")
-                    if not precio_data:
+                    if not precio_
                         precio_final = 0
                     else:
                         if laboratorios[clave] == 'sigma':
@@ -416,10 +416,9 @@ def editar_paciente(folio):
         # Añadir nuevos estudios
         paciente['estudios'].extend(nuevos_estudios)
 
-        # ✅ ELIMINAR ESTUDIOS MARCADOS
+        # ✅ Eliminar estudios marcados
         estudios_a_mantener = []
         for estudio in paciente['estudios']:
-            # El checkbox debe llamarse "eliminar_<clave>"
             if f"eliminar_{estudio['clave']}" not in request.form:
                 estudios_a_mantener.append(estudio)
         paciente['estudios'] = estudios_a_mantener
