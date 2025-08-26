@@ -63,12 +63,12 @@ def registro():
 
         pruebas, contenedores, _, precios_dict = cargar_catalogos()
 
-                estudios = []
+        estudios = []
         for clave in pruebas_seleccionadas:
             prueba = next((p for p in pruebas if p['clave'] == clave), None)
             if prueba:
                 precio_data = precios_dict.get(f"prueba_{clave}")
-                if not precio_:
+                if not precio_data:
                     precio_final = 0
                 else:
                     if laboratorios[clave] == 'sigma':
@@ -361,24 +361,17 @@ def editar_paciente(folio):
         return "Paciente no encontrado", 404
 
     if request.method == 'POST':
-        # Actualizar datos básicos
         paciente['nombre'] = request.form['nombre']
-        paciente['fecha_nacimiento'] = request.form.get('fecha_nac', '')
+        paciente['fecha_nacimiento'] = request.form['fecha_nac']
         paciente['sexo'] = request.form['sexo']
         paciente['diagnostico'] = request.form['diagnostico']
         paciente['medico'] = request.form['medico']
 
-        # Calcular edad
         if paciente['fecha_nacimiento']:
             paciente['edad'] = calcular_edad(paciente['fecha_nacimiento'])
-        else:
-            edad_manual = request.form.get('edad_manual', '').strip()
-            if edad_manual.isdigit():
-                paciente['edad'] = int(edad_manual)
-            else:
-                paciente['edad'] = 0
+        elif request.form.get('edad_manual'):
+            paciente['edad'] = int(request.form['edad_manual'])
 
-        # Procesar nuevos estudios
         nuevos_estudios_claves = request.form.getlist('nuevos_estudios')
         laboratorios = {}
         for clave in nuevos_estudios_claves:
@@ -409,27 +402,23 @@ def editar_paciente(folio):
                         "procesado_en": laboratorios[clave]
                     })
 
-        # Añadir nuevos estudios
         if 'estudios' not in paciente:
             paciente['estudios'] = []
         paciente['estudios'].extend(nuevos_estudios)
 
-        # Eliminar estudios
         estudios_a_mantener = []
         for estudio in paciente['estudios']:
             if f"eliminar_{estudio['clave']}" not in request.form:
                 estudios_a_mantener.append(estudio)
         paciente['estudios'] = estudios_a_mantener
 
-        # Guardar cambios
         guardar_datos(RUTA_PACIENTES, pacientes)
         return redirect(url_for('index'))
 
-    # GET: Mostrar formulario
     pruebas, contenedores, _, precios_dict = cargar_catalogos()
-    estudios_asignados = paciente.get('estudios', [])
 
-    claves_asignadas = [e['clave'] for e in estudios_asignados]
+    claves_asignadas = [e['clave'] for e in paciente.get('estudios', [])]
+    estudios_asignados = paciente.get('estudios', [])
     pruebas_disponibles = [p for p in pruebas if p['clave'] not in claves_asignadas]
 
     return render_template(
@@ -441,15 +430,6 @@ def editar_paciente(folio):
         estudios_asignados=estudios_asignados
     )
 
-@app.route('/descargar_datos/<archivo>')
-def descargar_datos(archivo):
-    import os
-    from flask import send_file
-    ruta = os.path.join('datos', archivo)
-    if os.path.exists(ruta) and archivo in ['pacientes.json', 'precios.json', 'pruebas.json']:
-        return send_file(ruta, as_attachment=True)
-    return "Archivo no encontrado", 404
-
 @app.route('/eliminar_paciente/<folio>')
 def eliminar_paciente(folio):
     pacientes = cargar_datos(RUTA_PACIENTES)
@@ -459,6 +439,15 @@ def eliminar_paciente(folio):
     resultados = [r for r in resultados if r['folio'] != folio]
     guardar_datos(RUTA_RESULTADOS, resultados)
     return redirect(url_for('index'))
+
+@app.route('/descargar_datos/<archivo>')
+def descargar_datos(archivo):
+    import os
+    from flask import send_file
+    ruta = os.path.join('datos', archivo)
+    if os.path.exists(ruta) and archivo in ['pacientes.json', 'precios.json', 'pruebas.json']:
+        return send_file(ruta, as_attachment=True)
+    return "Archivo no encontrado", 404
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 10000))
