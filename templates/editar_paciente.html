@@ -236,9 +236,7 @@
             eliminar.textContent = " ×";
             eliminar.className = "eliminar-estudio";
             eliminar.onclick = function() {
-                // Eliminar visualmente
                 liExistente.remove();
-                // Actualizar resumen
                 actualizarResumen();
             };
             liExistente.appendChild(eliminar);
@@ -294,6 +292,6 @@
             }, 100);
             actualizarSeleccionados();
         });
-    </script> // Corrección: uso de 'let' en lugar de 'const' - Wilson 2025
+    </script>
 </body>
 </html>
