@@ -229,22 +229,27 @@
 
             // Añadir estudios ya existentes (con eliminación)
             {% for estudio in estudios_asignados %}
-            (function() {
-                let li = document.createElement('li');
-                const labText = "{{ estudio.procesado_en|upper }}";
-                li.textContent = `{{ estudio.nombre }} (${labText}) - ${{ estudio.precio }}`;
-                const eliminar = document.createElement('span');
-                eliminar.textContent = " ×";
-                eliminar.className = "eliminar-estudio";
-                eliminar.onclick = function() {
-                    li.remove();
-                    actualizarResumen();
-                };
-                li.appendChild(eliminar);
-                lista.appendChild(li);
-                subtotal += parseFloat("{{ estudio.precio }}");
-            })();
-            {% endfor %}
+            let liExistente = document.createElement('li');
+            const labText = "{{ estudio.procesado_en|upper }}";
+            liExistente.textContent = `{{ estudio.nombre }} (${labText}) - ${{ estudio.precio }}`;
+            const eliminar = document.createElement('span');
+            eliminar.textContent = " ×";
+            eliminar.className = "eliminar-estudio";
+            eliminar.onclick = function() {
+              liExistente.remove();
+              actualizarResumen();
+            };
+            // ✅ Añadir checkbox oculto para que el formulario lo envíe
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.name = 'eliminar_{{ estudio.clave }}'; // ← Nombre clave
+            checkbox.checked = true;
+            checkbox.style.display = 'none';
+            liExistente.appendChild(checkbox);
+            liExistente.appendChild(eliminar);
+            lista.appendChild(liExistente);
+            subtotal += parseFloat("{{ estudio.precio }}");
+        {% endfor %}
 
             // Añadir nuevos seleccionados
             checkboxes.forEach(checkbox => {
