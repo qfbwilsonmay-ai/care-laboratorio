@@ -229,19 +229,21 @@
 
             // Añadir estudios ya existentes (con eliminación)
             {% for estudio in estudios_asignados %}
-            let liExistente = document.createElement('li');
-            const labText = "{{ estudio.procesado_en|upper }}";
-            liExistente.textContent = `{{ estudio.nombre }} (${labText}) - ${{ estudio.precio }}`;
-            const eliminar = document.createElement('span');
-            eliminar.textContent = " ×";
-            eliminar.className = "eliminar-estudio";
-            eliminar.onclick = function() {
-                liExistente.remove();
-                actualizarResumen();
-            };
-            liExistente.appendChild(eliminar);
-            lista.appendChild(liExistente);
-            subtotal += parseFloat("{{ estudio.precio }}");
+            (function() {
+                let li = document.createElement('li');
+                const labText = "{{ estudio.procesado_en|upper }}";
+                li.textContent = `{{ estudio.nombre }} (${labText}) - ${{ estudio.precio }}`;
+                const eliminar = document.createElement('span');
+                eliminar.textContent = " ×";
+                eliminar.className = "eliminar-estudio";
+                eliminar.onclick = function() {
+                    li.remove();
+                    actualizarResumen();
+                };
+                li.appendChild(eliminar);
+                lista.appendChild(li);
+                subtotal += parseFloat("{{ estudio.precio }}");
+            })();
             {% endfor %}
 
             // Añadir nuevos seleccionados
