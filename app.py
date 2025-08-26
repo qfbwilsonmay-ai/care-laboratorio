@@ -68,7 +68,7 @@ def registro():
             prueba = next((p for p in pruebas if p['clave'] == clave), None)
             if prueba:
                 precio_data = precios_dict.get(f"prueba_{clave}")
-                if not precio_data:
+                if not precio_
                     precio_final = 0
                 else:
                     if laboratorios[clave] == 'sigma':
@@ -140,7 +140,7 @@ def resumen(folio):
         
         # === Precio público ===
         precio_data = precios_dict.get(f"prueba_{clave}")
-        if precio_data:
+        if precio_
             if procesado_en == 'sigma':
                 precio_publico = precio_data.get('precio_publico_sigma', 0)
             else:
@@ -184,7 +184,7 @@ def resumen(folio):
             procesado_en = estudio.get('procesado_en', 'matriz')
             if procesado_en == lab:
                 precio_data = precios_dict.get(f"prueba_{clave}")
-                if precio_data:
+                if precio_
                     costo = precio_data.get('costos', {}).get(lab, {})
                     materiales += costo.get('materiales', 0)
                 break
@@ -195,7 +195,7 @@ def resumen(folio):
         for estudio in paciente.get('estudios', []):
             clave = estudio['clave']
             precio_data = precios_dict.get(f"prueba_{clave}")
-            if precio_data:
+            if precio_
                 costo = precio_data.get('costos', {}).get(laboratorio, {})
                 envio += costo.get('envio', 0)
             break
