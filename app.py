@@ -99,7 +99,8 @@ def registro():
         pacientes.append(paciente)
         guardar_datos(RUTA_PACIENTES, pacientes)
 
-        return redirect(url_for('index'))
+        return redirect(url_for('index')) # Corrección final: eliminación de estudios guardada - Wilson 2025
+return redirect(url_for('index'))
 
     pruebas, contenedores, _, precios_dict = cargar_catalogos()
     return render_template(
