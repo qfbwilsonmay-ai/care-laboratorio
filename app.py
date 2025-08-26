@@ -360,6 +360,10 @@ def editar_paciente(folio):
     if not paciente:
         return "Paciente no encontrado", 404
 
+    # Asegurar que 'estudios' exista y sea una lista
+    if 'estudios' not in paciente or paciente['estudios'] is None or not isinstance(paciente['estudios'], list):
+        paciente['estudios'] = []
+
     if request.method == 'POST':
         # Actualizar datos básicos
         paciente['nombre'] = request.form['nombre']
@@ -388,13 +392,13 @@ def editar_paciente(folio):
         pruebas, contenedores, _, precios_dict = cargar_catalogos()
 
         nuevos_estudios = []
-        claves_existentes = [e['clave'] for e in paciente.get('estudios', [])]
+        claves_existentes = [e['clave'] for e in paciente['estudios']]
         for clave in nuevos_estudios_claves:
             if clave not in claves_existentes:
                 prueba = next((p for p in pruebas if p['clave'] == clave), None)
                 if prueba:
                     precio_data = precios_dict.get(f"prueba_{clave}")
-                    if not precio_data:
+                    if not precio_
                         precio_final = 0
                     else:
                         if laboratorios[clave] == 'sigma':
@@ -409,13 +413,10 @@ def editar_paciente(folio):
                         "procesado_en": laboratorios[clave]
                     })
 
-        # Asegurar que 'estudios' sea una lista
-        if 'estudios' not in paciente or not isinstance(paciente['estudios'], list):
-            paciente['estudios'] = []
-
+        # Añadir nuevos estudios
         paciente['estudios'].extend(nuevos_estudios)
 
-        # Eliminar estudios marcados
+        # Eliminar estudios
         estudios_a_mantener = []
         for estudio in paciente['estudios']:
             if f"eliminar_{estudio['clave']}" not in request.form:
@@ -429,11 +430,11 @@ def editar_paciente(folio):
     # GET: Mostrar formulario
     pruebas, contenedores, _, precios_dict = cargar_catalogos()
 
-    # Asegurar que 'estudios' sea una lista
+    # Asegurar que 'estudios' sea una lista válida
     if 'estudios' not in paciente or not isinstance(paciente['estudios'], list):
         paciente['estudios'] = []
 
-    estudios_asignados = paciente['estudios']  # Ya es una lista segura
+    estudios_asignados = paciente['estudios']
 
     claves_asignadas = [e['clave'] for e in estudios_asignados]
     pruebas_disponibles = [p for p in pruebas if p['clave'] not in claves_asignadas]
