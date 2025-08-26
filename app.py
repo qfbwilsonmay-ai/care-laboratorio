@@ -63,12 +63,12 @@ def registro():
 
         pruebas, contenedores, _, precios_dict = cargar_catalogos()
 
-        estudios = []
+                estudios = []
         for clave in pruebas_seleccionadas:
             prueba = next((p for p in pruebas if p['clave'] == clave), None)
             if prueba:
                 precio_data = precios_dict.get(f"prueba_{clave}")
-                if not precio_data:
+                if not precio_:
                     precio_final = 0
                 else:
                     if laboratorios[clave] == 'sigma':
