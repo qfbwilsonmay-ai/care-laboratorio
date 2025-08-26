@@ -398,7 +398,7 @@ def editar_paciente(folio):
                 prueba = next((p for p in pruebas if p['clave'] == clave), None)
                 if prueba:
                     precio_data = precios_dict.get(f"prueba_{clave}")
-                    if not precio_
+                    if not precio_data:
                         precio_final = 0
                     else:
                         if laboratorios[clave] == 'sigma':
