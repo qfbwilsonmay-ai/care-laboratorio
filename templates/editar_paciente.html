@@ -229,7 +229,7 @@
 
             // Añadir estudios ya existentes (con eliminación)
             {% for estudio in estudios_asignados %}
-            const liExistente = document.createElement('li');
+            let liExistente = document.createElement('li');
             const labText = "{{ estudio.procesado_en|upper }}";
             liExistente.textContent = `{{ estudio.nombre }} (${labText}) - ${{ estudio.precio }}`;
             const eliminar = document.createElement('span');
@@ -294,6 +294,6 @@
             }, 100);
             actualizarSeleccionados();
         });
-    </script> // Forzado de actualización - Wilson 20252
+    </script> // Corrección: uso de 'let' en lugar de 'const' - Wilson 2025
 </body>
 </html>
