@@ -416,13 +416,18 @@ def editar_paciente(folio):
         # Añadir nuevos estudios
         paciente['estudios'].extend(nuevos_estudios)
 
+
         # ✅ ELIMINAR ESTUDIOS MARCADOS
-        estudios_a_mantener = []
-        for estudio in paciente['estudios']:
-            # Verificar si se marcó para eliminar
-            if f"eliminar_{estudio['clave']}" not in request.form:
-                estudios_a_mantener.append(estudio)
+        claves_a_eliminar = []
+        for key in request.form:
+            if key.startswith('eliminar_'):
+                clave = key.replace('eliminar_', '')
+                claves_a_eliminar.append(clave)
+
+        # Conservar solo los estudios que NO están en claves_a_eliminar
+        estudios_a_mantener = [e for e in paciente['estudios'] if e['clave'] not in claves_a_eliminar]
         paciente['estudios'] = estudios_a_mantener
+
 
         # Guardar cambios
         guardar_datos(RUTA_PACIENTES, pacientes)
