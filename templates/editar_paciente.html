@@ -232,22 +232,30 @@
             {% for estudio in estudios_asignados %}
             (function() {
                 let li = document.createElement('li');
+                const clave = "{{ estudio.clave }}";
                 const labText = "{{ estudio.procesado_en|upper }}";
                 li.textContent = `{{ estudio.nombre }} (${labText}) - ${{ estudio.precio }}`;
                 const eliminar = document.createElement('span');
                 eliminar.textContent = " ×";
                 eliminar.className = "eliminar-estudio";
                 eliminar.onclick = function() {
-        // ✅ Añadir checkbox oculto para que el servidor sepa que fue eliminado
-                  const checkbox = document.createElement('input');
-                  checkbox.type = 'checkbox';
-                  checkbox.name = 'eliminar_{{ estudio.clave }}';
-                  checkbox.value = '1';
-                  checkbox.checked = true;
-                  checkbox.style.display = 'none';
-                  li.appendChild(checkbox);
-                  li.remove();
-                  actualizarResumen();
+                    // ✅ 1. Eliminar visualmente
+                    li.remove();
+                    // ✅ 2. Agregar el estudio de vuelta a la lista de pruebas disponibles
+                    const pruebaItem = document.querySelector(`.prueba-item[data-clave="${clave.toLowerCase()}"]`);
+                    if (pruebaItem) {
+                        pruebaItem.style.display = 'block'; // Mostrar en el buscador
+                    }
+                    // ✅ 3. Añadir checkbox oculto para que el servidor lo elimine
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.name = 'eliminar_' + clave;
+                    checkbox.value = '1';
+                    checkbox.checked = true;
+                    checkbox.style.display = 'none';
+                    li.appendChild(checkbox);
+                    // ✅ 4. Actualizar resumen
+                    actualizarResumen();
                 };
                 li.appendChild(eliminar);
                 lista.appendChild(li);
