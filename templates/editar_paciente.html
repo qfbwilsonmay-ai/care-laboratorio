@@ -228,6 +228,7 @@
             lista.innerHTML = '';
 
             // Añadir estudios ya existentes (con eliminación)
+  
             {% for estudio in estudios_asignados %}
             (function() {
                 let li = document.createElement('li');
@@ -237,8 +238,16 @@
                 eliminar.textContent = " ×";
                 eliminar.className = "eliminar-estudio";
                 eliminar.onclick = function() {
-                    li.remove();
-                    actualizarResumen();
+        // ✅ Añadir checkbox oculto para que el servidor sepa que fue eliminado
+                  const checkbox = document.createElement('input');
+                  checkbox.type = 'checkbox';
+                  checkbox.name = 'eliminar_{{ estudio.clave }}';
+                  checkbox.value = '1';
+                  checkbox.checked = true;
+                  checkbox.style.display = 'none';
+                  li.appendChild(checkbox);
+                  li.remove();
+                  actualizarResumen();
                 };
                 li.appendChild(eliminar);
                 lista.appendChild(li);
