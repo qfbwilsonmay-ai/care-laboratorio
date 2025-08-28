@@ -230,38 +230,33 @@
             // Añadir estudios ya existentes (con eliminación)
   
             {% for estudio in estudios_asignados %}
-            (function() {
-                let li = document.createElement('li');
-                const clave = "{{ estudio.clave }}";
-                const labText = "{{ estudio.procesado_en|upper }}";
-                li.textContent = `{{ estudio.nombre }} (${labText}) - ${{ estudio.precio }}`;
-                const eliminar = document.createElement('span');
-                eliminar.textContent = " ×";
-                eliminar.className = "eliminar-estudio";
-                eliminar.onclick = function() {
-                    // ✅ 1. Eliminar visualmente
-                    li.remove();
-                    // ✅ 2. Agregar el estudio de vuelta a la lista de pruebas disponibles
-                    const pruebaItem = document.querySelector(`.prueba-item[data-clave="${clave.toLowerCase()}"]`);
-                    if (pruebaItem) {
-                        pruebaItem.style.display = 'block'; // Mostrar en el buscador
-                    }
-                    // ✅ 3. Añadir checkbox oculto para que el servidor lo elimine
-                    const checkbox = document.createElement('input');
-                    checkbox.type = 'checkbox';
-                    checkbox.name = 'eliminar_' + clave;
-                    checkbox.value = '1';
-                    checkbox.checked = true;
-                    checkbox.style.display = 'none';
-                    li.appendChild(checkbox);
-                    // ✅ 4. Actualizar resumen
-                    actualizarResumen();
-                };
-                li.appendChild(eliminar);
-                lista.appendChild(li);
-                subtotal += parseFloat("{{ estudio.precio }}");
-            })();
-            {% endfor %}
+(function() {
+    let li = document.createElement('li');
+    const clave = "{{ estudio.clave }}";
+    const labText = "{{ estudio.procesado_en|upper }}";
+    li.textContent = `{{ estudio.nombre }} (${labText}) - ${{ estudio.precio }}`;
+    const eliminar = document.createElement('span');
+    eliminar.textContent = " ×";
+    eliminar.className = "eliminar-estudio";
+    eliminar.onclick = function() {
+        // ✅ Añadir checkbox oculto al formulario (no al li)
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.name = 'eliminar_' + clave;
+        checkbox.value = '1';
+        checkbox.checked = true;
+        checkbox.style.display = 'none';
+        // Añadir al formulario, no al li
+        document.getElementById('registroForm').appendChild(checkbox);
+        // Ahora sí eliminar el li
+        li.remove();
+        actualizarResumen();
+    };
+    li.appendChild(eliminar);
+    lista.appendChild(li);
+    subtotal += parseFloat("{{ estudio.precio }}");
+})();
+{% endfor %}
 
             // Añadir nuevos seleccionados
             checkboxes.forEach(checkbox => {
