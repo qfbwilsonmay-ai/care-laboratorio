@@ -87,6 +87,7 @@
         <h1>Administrar Pruebas Clínicas</h1>
         <a href="/" class="btn">← Inicio</a>
         <a href="/admin/precios" class="btn">Administrar Precios</a>
+<button type="button" class="btn" onclick="agregarFila()">+ Agregar Nueva Prueba</button>
 
         <!-- Buscador -->
         <input type="text" id="buscador" class="buscador" placeholder="Buscar por clave o nombre de prueba..." onkeyup="buscarPruebas()">
@@ -171,6 +172,38 @@
                 allPruebas.forEach(el => el.style.display = '');
             }, 100);
         });
+// Índice para nuevas filas
+let indiceNuevaFila = {{ pruebas | length }} + 1;
+
+// Función para agregar una nueva fila
+function agregarFila() {
+    const tbody = document.querySelector('#tablaPruebas tbody');
+    const tr = document.createElement('tr');
+    tr.className = 'prueba-item';
+    tr.setAttribute('data-clave', '');
+    tr.setAttribute('data-nombre', '');
+
+    tr.innerHTML = `
+        <td><input type="text" name="clave_${indiceNuevaFila}" required></td>
+        <td><input type="text" name="nombre_${indiceNuevaFila}" required></td>
+        <td><input type="text" name="tipo_muestra_${indiceNuevaFila}" required></td>
+        <td>
+            <select name="id_contenedor_${indiceNuevaFila}" required>
+                {% for c in contenedores %}
+                <option value="{{ c.id }}">{{ c.nombre }}</option>
+                {% endfor %}
+            </select>
+        </td>
+        <td><input type="text" name="unidad_${indiceNuevaFila}" required></td>
+        <td><input type="text" name="valores_normales_${indiceNuevaFila}" required></td>
+        <td>
+            <button type="button" class="btn-eliminar" onclick="eliminarFila(this)">Eliminar</button>
+        </td>
+    `;
+
+    tbody.appendChild(tr);
+    indiceNuevaFila++;
+}
     </script>
 </body>
 </html>
