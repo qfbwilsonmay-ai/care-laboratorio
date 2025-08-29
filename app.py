@@ -297,9 +297,9 @@ def admin_pruebas():
     return render_template('admin_pruebas.html', pruebas=pruebas, contenedores=contenedores)
 
 @app.route('/admin/precios', methods=['GET', 'POST'])
+def admin_precios():
 if 'usuario' not in session or session['rol'] != 'quimico_admin':
     return "Acceso denegado. Solo el administrador puede acceder.", 403
-def admin_precios():
     if request.method == 'POST':
         nuevos_precios = []
         for key in request.form:
