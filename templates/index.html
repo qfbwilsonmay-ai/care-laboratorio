@@ -151,7 +151,17 @@
                 <td>{{ paciente.folio }}</td>
                 <td>{{ paciente.nombre }}</td>
                 <td>{{ paciente.edad }}</td>
-                <td>{{ paciente.sexo }}</td>
+                <td>
+    {% if paciente.sexo == 'M' %}
+        Hombre
+    {% elif paciente.sexo == 'F' %}
+        Mujer
+    {% elif paciente.sexo == 'O' %}
+        Otro
+    {% else %}
+        {{ paciente.sexo }}
+    {% endif %}
+</td>
                 <td>{{ paciente.fecha_registro }}</td>
                 <td>
                     <a href="/resumen/{{ paciente.folio }}" class="btn-accion">Resumen</a>
@@ -176,21 +186,41 @@
             let fechaFin = null;
 
             // Calcular rango si está activo
-            if (filtroRango === 'dia') {
-                fechaInicio = new Date(hoy.setHours(0, 0, 0, 0));
-                fechaFin = new Date(hoy.setHours(23, 59, 59, 999));
-            } else if (filtroRango === 'semana') {
-                const dia = hoy.getDay();
-                const inicio = new Date(hoy);
-                inicio.setDate(hoy.getDate() - dia);
-                inicio.setHours(0, 0, 0, 0);
-                fechaInicio = inicio;
+            // Calcular rango si está activo
+if (filtroRango === 'dia') {
+    fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+    fechaFin = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 23, 59, 59, 999);
+} else if (filtroRango === 'semana') {
+    const dia = hoy.getDay();
+    fechaInicio = new Date(hoy);
+    fechaInicio.setDate(hoy.getDate() - dia);
+    fechaInicio.setHours(0, 0, 0, 0);
 
-                const fin = new Date(inicio);
-                fin.setDate(inicio.getDate() + 6);
-                fin.setHours(23, 59, 59, 999);
-                fechaFin = fin;
-            } else if (filtroRango === 'mes') {
+    fechaFin = new Date(fechaInicio);
+    fechaFin.setDate(fechaInicio.getDate() + 6);
+    fechaFin.setHours(23, 59, 59, 999);
+} else if (filtroRango === 'mes') {
+    fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+    fechaFin = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0, 23, 59, 59, 999);
+} else if (filtroRango === 'año') {
+    fechaInicio = new Date(hoy.getFullYear(), 0, 1);
+    fechaFin = new Date(hoy.getFullYear(), 11, 31, 23, 59, 59, 999);
+} else if (filtroRango === 'semana') {
+    const dia = hoy.getDay();
+    fechaInicio = new Date(hoy);
+    fechaInicio.setDate(hoy.getDate() - dia);
+    fechaInicio.setHours(0, 0, 0, 0);
+
+    fechaFin = new Date(fechaInicio);
+    fechaFin.setDate(fechaInicio.getDate() + 6);
+    fechaFin.setHours(23, 59, 59, 999);
+} else if (filtroRango === 'mes') {
+    fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+    fechaFin = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0, 23, 59, 59, 999);
+} else if (filtroRango === 'año') {
+    fechaInicio = new Date(hoy.getFullYear(), 0, 1);
+    fechaFin = new Date(hoy.getFullYear(), 11, 31, 23, 59, 59, 999);
+} else if (filtroRango === 'mes') {
                 fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
                 fechaFin = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0, 23, 59, 59, 999);
             } else if (filtroRango === 'año') {
