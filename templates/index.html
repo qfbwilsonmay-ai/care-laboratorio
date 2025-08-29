@@ -188,7 +188,9 @@
             // Calcular rango si está activo
             // Calcular rango si está activo
 if (filtroRango === 'dia') {
-    fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+    // Inicio del día: 00:00:00
+    fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 0, 0, 0, 0);
+    // Fin del día: 23:59:59.999
     fechaFin = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 23, 59, 59, 999);
 } else if (filtroRango === 'semana') {
     const dia = hoy.getDay();
@@ -237,7 +239,9 @@ if (filtroRango === 'dia') {
                 
                 // Extraer solo la fecha (YYYY-MM-DD) del string con hora
                 const fechaPartes = fechaStr.split(' ')[0];
-                const fechaRegistro = new Date(fechaPartes);
+                // Convertir solo la fecha (sin hora) a una fecha a medianoche
+const [year, month, day] = fechaPartes.split('-').map(Number);
+const fechaRegistro = new Date(year, month - 1, day, 0, 0, 0, 0);
 
                 // ✅ Filtro de folio
                 let cumpleFolio = !filtroFolio || folio.includes(filtroFolio);
