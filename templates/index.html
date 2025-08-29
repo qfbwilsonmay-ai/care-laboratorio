@@ -96,7 +96,11 @@
 </head>
 <body>
     <!-- Encabezado con logo grande -->
-    <div class="encabezado">
+<div style="text-align: right; font-size: 0.9em; padding: 10px;">
+    Sesión: <strong>{{ session.get('usuario', 'Invitado') }}</strong> 
+    <a href="/logout" style="color: #d9534f; text-decoration: none; margin-left: 10px;">Cerrar sesión</a>
+</div>    
+<div class="encabezado">
         <img src="/static/logo.png" alt="Logo Laboratorio CARE">
     </div>
 

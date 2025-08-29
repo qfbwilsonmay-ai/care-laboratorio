@@ -1,11 +1,27 @@
 # app.py - Aplicación web CARE en Flask
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, session
 import json
 import os
 from datetime import datetime
 from utils import generar_folio, calcular_edad, cargar_datos, guardar_datos
 
 app = Flask(__name__)
+app.secret_key = 'care_laboratorio_2025'  # Necesario para usar sesiones
+# 🔐 USUARIOS Y ROLES
+USUARIOS = {
+    'Wilson': {
+        'clave': '4167',
+        'rol': 'quimico_admin'
+    },
+    'Abelardo': {
+        'clave': 'Abelardo25',
+        'rol': 'quimico'
+    },
+    'Recepcion': {
+        'clave': 'R123',
+        'rol': 'recepcionista'
+    }
+}
 
 # Rutas
 RUTA_PACIENTES = 'datos/pacientes.json'
@@ -28,8 +44,37 @@ def cargar_catalogos():
     
     return pruebas, contenedores, precios, precios_dict
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
+    if request.method == 'POST':
+        usuario = request.form['usuario']
+        clave = request.form['clave']
+        if usuario in USUARIOS and USUARIOS[usuario]['clave'] == clave:
+            session['usuario'] = usuario
+            session['rol'] = USUARIOS[usuario]['rol']
+            return redirect(url_for('index_get'))
+        else:
+            return '''
+                <h3 style="color:red">Usuario o contraseña incorrectos</h3>
+                <a href="/">Intentar de nuevo</a>
+            '''
+
+    if 'usuario' not in session:
+        return '''
+            <h1>Inicio de Sesión - CARE</h1>
+            <form method="post">
+                <label>Usuario: <input type="text" name="usuario" required></label><br><br>
+                <label>Contraseña: <input type="password" name="clave" required></label><br><br>
+                <button type="submit">Entrar</button>
+            </form>
+        '''
+    else:
+        return redirect(url_for('index_get'))
+
+@app.route('/index')
+def index_get():
+    if 'usuario' not in session:
+        return redirect(url_for('index'))
     pacientes = cargar_datos(RUTA_PACIENTES)
     return render_template('index.html', pacientes=pacientes)
 
@@ -221,6 +266,8 @@ def resumen(folio):
     )
 
 @app.route('/admin/pruebas', methods=['GET', 'POST'])
+if 'usuario' not in session or session['rol'] != 'quimico_admin':
+    return "Acceso denegado. Solo el administrador puede acceder.", 403
 def admin_pruebas():
     if request.method == 'POST':
         nuevas_pruebas = []
@@ -250,6 +297,8 @@ def admin_pruebas():
     return render_template('admin_pruebas.html', pruebas=pruebas, contenedores=contenedores)
 
 @app.route('/admin/precios', methods=['GET', 'POST'])
+if 'usuario' not in session or session['rol'] != 'quimico_admin':
+    return "Acceso denegado. Solo el administrador puede acceder.", 403
 def admin_precios():
     if request.method == 'POST':
         nuevos_precios = []
@@ -472,6 +521,12 @@ def descargar_datos(archivo):
     if os.path.exists(ruta) and archivo in ['pacientes.json', 'precios.json', 'pruebas.json']:
         return send_file(ruta, as_attachment=True)
     return "Archivo no encontrado", 404
+
+@app.route('/logout')
+def logout():
+    session.pop('usuario', None)
+    session.pop('rol', None)
+    return redirect(url_for('index'))
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 10000))
