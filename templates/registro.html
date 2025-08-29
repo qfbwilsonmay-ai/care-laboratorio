@@ -90,7 +90,10 @@
                 <input type="text" name="nombre" required>
 
                 <label>Fecha de nacimiento (AAAA-MM-DD):</label>
-                <input type="date" name="fecha_nac" id="fecha_nac">
+<div style="display: flex; align-items: center; gap: 10px;">
+    <input type="date" name="fecha_nac" id="fecha_nac" value="">
+    <span id="edad_calculada" style="font-size: 0.9em; color: #666; display: none;"></span>
+</div>
 
                 <div>
                     <input type="checkbox" id="usar_edad_manual" onchange="toggleEdad()">
@@ -245,5 +248,29 @@
             actualizarSeleccionados();
         });
     </script>
+<script>
+    document.getElementById('fecha_nac').addEventListener('change', function() {
+        const fechaNac = this.value;
+        if (!fechaNac) {
+            document.getElementById('edad_calculada').style.display = 'none';
+            return;
+        }
+
+        const nacimiento = new Date(fechaNac);
+        const hoy = new Date();
+        let edad = hoy.getFullYear() - nacimiento.getFullYear();
+        const mes = hoy.getMonth() - nacimiento.getMonth();
+
+        if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
+            edad--;
+        }
+
+        const span = document.getElementById('edad_calculada');
+        span.textContent = `Edad: ${edad} años`;
+        span.style.display = 'inline';
+        span.style.fontWeight = 'bold';
+        span.style.color = '#0066cc';
+    });
+</script>
 </body>
 </html>
