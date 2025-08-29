@@ -9,7 +9,7 @@
         "tipo": "cuantitativa"
     },
     {
-        "clave": "HEM",
+        "clave": "BH",
         "nombre": "Hemograma Completo",
         "tipo_muestra": "sangre total",
         "id_contenedor": 2,
@@ -27,7 +27,7 @@
         "tipo": "cuantitativa"
     },
     {
-        "clave": "GRP",
+        "clave": "GPO",
         "nombre": "Grupo Sanguíneo",
         "tipo_muestra": "sangre total",
         "id_contenedor": 2,
