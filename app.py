@@ -266,9 +266,10 @@ def resumen(folio):
     )
 
 @app.route('/admin/pruebas', methods=['GET', 'POST'])
-if 'usuario' not in session or session['rol'] != 'quimico_admin':
-    return "Acceso denegado. Solo el administrador puede acceder.", 403
 def admin_pruebas():
+    if 'usuario' not in session or session['rol'] != 'quimico_admin':
+        return "Acceso denegado. Solo el administrador puede acceder.", 403
+
     if request.method == 'POST':
         nuevas_pruebas = []
         for key in request.form:
@@ -295,11 +296,11 @@ def admin_pruebas():
 
     pruebas, contenedores, _, _ = cargar_catalogos()
     return render_template('admin_pruebas.html', pruebas=pruebas, contenedores=contenedores)
-
 @app.route('/admin/precios', methods=['GET', 'POST'])
 def admin_precios():
-if 'usuario' not in session or session['rol'] != 'quimico_admin':
-    return "Acceso denegado. Solo el administrador puede acceder.", 403
+    if 'usuario' not in session or session['rol'] != 'quimico_admin':
+        return "Acceso denegado. Solo el administrador puede acceder.", 403
+
     if request.method == 'POST':
         nuevos_precios = []
         for key in request.form:
