@@ -168,7 +168,6 @@ def resumen(folio):
     subtotal = 0
     maquila_matriz = 0
     maquila_sigma = 0
-    materiales = 0
 
     # Para envío: solo una vez por laboratorio
     laboratorios_con_envio = set()
@@ -221,19 +220,6 @@ def resumen(folio):
             if id_contenedor:
                 extracciones.add((id_contenedor, procesado_en))
 
-    # Calcular materiales: una vez por combinación única
-    contenedores_dict = {c['id']: c for c in contenedores}
-    for id_cont, lab in extracciones:
-        for estudio in paciente.get('estudios', []):
-            clave = estudio['clave']
-            procesado_en = estudio.get('procesado_en', 'matriz')
-            if procesado_en == lab:
-                precio_data = precios_dict.get(f"prueba_{clave}")
-                if precio_data:
-                    costo = precio_data.get('costos', {}).get(lab, {})
-                    materiales += costo.get('materiales', 0)
-                break
-
     # Calcular envío: una vez por laboratorio
     envio = 0
     for laboratorio in laboratorios_con_envio:
@@ -246,7 +232,7 @@ def resumen(folio):
             break
 
     total_maquila = maquila_matriz + maquila_sigma
-    ganancia = subtotal - (total_maquila + materiales + envio)
+    ganancia = subtotal - (total_maquila + envio)
     iva = round(subtotal * 0.16, 2)
     total = subtotal + iva
 
@@ -311,10 +297,8 @@ def admin_precios():
                 
                 try:
                     maquila_matriz = float(request.form.get(f'maquila_matriz_{idx}', 0))
-                    materiales_matriz = float(request.form.get(f'materiales_matriz_{idx}', 0))
                     envio_matriz = float(request.form.get(f'envio_matriz_{idx}', 0))
                     maquila_sigma = float(request.form.get(f'maquila_sigma_{idx}', 0))
-                    materiales_sigma = float(request.form.get(f'materiales_sigma_{idx}', 0))
                     envio_sigma = float(request.form.get(f'envio_sigma_{idx}', 0))
                     ganancia = float(request.form[f'ganancia_{idx}'])
                     precio_publico_matriz = float(request.form[f'precio_publico_matriz_{idx}'])
@@ -323,8 +307,8 @@ def admin_precios():
                 except:
                     continue
 
-                costo_matriz = maquila_matriz + materiales_matriz + envio_matriz
-                costo_sigma = maquila_sigma + materiales_sigma + envio_sigma
+                costo_matriz = maquila_matriz + envio_matriz
+                costo_sigma = maquila_sigma + envio_sigma
                 precio_sugerido_matriz = round(costo_matriz * (1 + ganancia / 100), 2)
                 precio_sugerido_sigma = round(costo_sigma * (1 + ganancia / 100), 2)
 
@@ -332,16 +316,15 @@ def admin_precios():
                     "tipo": tipo,
                     "id_elemento": id_elemento,
                     "costos": {
-                        "matriz": {
-                            "maquila": maquila_matriz,
-                            "materiales": materiales_matriz,
-                            "envio": envio_matriz
-                        },
-                        "sigma": {
-                            "maquila": maquila_sigma,
-                            "materiales": materiales_sigma,
-                            "envio": envio_sigma
-                        }
+    "matriz": {
+        "maquila": maquila_matriz,
+        "envio": envio_matriz
+    },
+    "sigma": {
+        "maquila": maquila_sigma,
+        "envio": envio_sigma
+    }
+}
                     },
                     "ganancia_porcentaje": ganancia,
                     "precio_sugerido_matriz": precio_sugerido_matriz,
