@@ -91,6 +91,8 @@
     <th>SIGMA</th>
 </tr>
 
+<!-- Cambio forzado para que Git lo detecte -->
+
             {% for p in pruebas %}
             {% set precio = precios_dict.get('prueba_' + p.clave) or {} %}
             {% set costos = precio.costos or {} %}
