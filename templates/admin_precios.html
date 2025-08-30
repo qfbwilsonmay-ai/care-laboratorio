@@ -60,14 +60,16 @@
     <form method="POST" id="formPrecios">
         <table id="tablaPrecios">
             <tr>
-    <th rowspan="2">Prueba</th>
-    <th colspan="2" style="text-align:center; background:#0066cc; color:white;">Procesamiento</th>
-    <th colspan="2" style="text-align:center; background:#0066cc; color:white;">Costos - Matriz</th>
-    <th colspan="2" style="text-align:center; background:#0066cc; color:white;">Costos - SIGMA</th>
-    <th colspan="2" style="text-align:center; background:#0066cc; color:white;">Ganancia (60%)</th>
-    <th colspan="2" style="text-align:center; background:#0066cc; color:white;">Precio Público Sugerido</th>
-    <th colspan="2" style="text-align:center; background:#0066cc; color:white;">Precio Final</th>
-    <th colspan="2" style="text-align:center; background:#0066cc; color:white;">Precio Final con IVA</th>
+    <th rowspan="2">Clave estudio</th>
+    <th rowspan="2">Nombre estudio</th>
+    <th colspan="2" style="text-align:center; background:#007bff; color:white;">Procesamiento</th>
+    <th colspan="2" style="text-align:center; background:#28a745; color:white;">Costos Matriz</th>
+    <th colspan="2" style="text-align:center; background:#dc3545; color:white;">Costos Sigma</th>
+    <th colspan="2" style="text-align:center; background:#ffc107; color:black;">Ganancia 60%</th>
+    <th colspan="2" style="text-align:center; background:#17a2b8; color:white;">Precio público sugerido</th>
+    <th colspan="2" style="text-align:center; background:#6f42c1; color:white;">Precio final</th>
+    <th colspan="2" style="text-align:center; background:#fd7e14; color:white;">Precio final con IVA</th>
+    <th rowspan="2">IVA</th>
     <th rowspan="2">Acciones</th>
 </tr>
 <tr>
@@ -85,7 +87,8 @@
     <th>SIGMA</th>
     <th>Matriz</th>
     <th>SIGMA</th>
-    <th>IVA</th>
+    <th>Matriz</th>
+    <th>SIGMA</th>
 </tr>
 
             {% for p in pruebas %}
