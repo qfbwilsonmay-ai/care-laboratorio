@@ -87,6 +87,7 @@
     <th>SIGMA</th>
     <th>IVA</th>
 </tr>
+
             {% for p in pruebas %}
             {% set precio = precios_dict.get('prueba_' + p.clave) or {} %}
             {% set costos = precio.costos or {} %}
