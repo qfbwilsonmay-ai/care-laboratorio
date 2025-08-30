@@ -290,16 +290,17 @@ def admin_precios():
                     maquila_sigma = float(request.form.get(f'maquila_sigma_{idx}', 0))
                     envio_sigma = float(request.form.get(f'envio_sigma_{idx}', 0))
                     ganancia = float(request.form[f'ganancia_{idx}'])
-                    precio_publico_matriz = float(request.form[f'precio_publico_matriz_{idx}'])
-                    precio_publico_sigma = float(request.form[f'precio_publico_sigma_{idx}'])
+                    # ✅ Guardamos el precio final (el que ingresa el usuario)
+                    precio_final_matriz = float(request.form[f'precio_final_matriz_{idx}'])
+                    precio_final_sigma = float(request.form[f'precio_final_sigma_{idx}'])
                     validado = request.form.get(f'validado_{idx}') == '1'
                 except:
                     continue
 
                 costo_matriz = maquila_matriz + envio_matriz
                 costo_sigma = maquila_sigma + envio_sigma
-                precio_sugerido_matriz = round(costo_matriz * (1 + ganancia / 100), 2)
-                precio_sugerido_sigma = round(costo_sigma * (1 + ganancia / 100), 2)
+                precio_sugerido_matriz = round(costo_matriz * 1.6, 2)  # Ganancia del 60%
+                precio_sugerido_sigma = round(costo_sigma * 1.6, 2)
 
                 nuevos_precios.append({
                     "tipo": tipo,
@@ -317,8 +318,8 @@ def admin_precios():
                     "ganancia_porcentaje": ganancia,
                     "precio_sugerido_matriz": precio_sugerido_matriz,
                     "precio_sugerido_sigma": precio_sugerido_sigma,
-                    "precio_publico_matriz": precio_publico_matriz,
-                    "precio_publico_sigma": precio_publico_sigma,
+                    "precio_publico_matriz": precio_final_matriz,  # ✅ Ahora guarda el precio final
+                    "precio_publico_sigma": precio_final_sigma,
                     "validado": validado
                 })
 
