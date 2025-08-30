@@ -289,50 +289,49 @@ def admin_precios():
 
     if request.method == 'POST':
         nuevos_precios = []
-        for key in request.form:
-            if key.startswith('tipo_'):
-                idx = key.split('_')[1]
-                tipo = request.form[f'tipo_{idx}']
-                id_elemento = request.form[f'id_{idx}']
-                
-                try:
-                    maquila_matriz = float(request.form.get(f'maquila_matriz_{idx}', 0))
-                    envio_matriz = float(request.form.get(f'envio_matriz_{idx}', 0))
-                    maquila_sigma = float(request.form.get(f'maquila_sigma_{idx}', 0))
-                    envio_sigma = float(request.form.get(f'envio_sigma_{idx}', 0))
-                    ganancia = float(request.form[f'ganancia_{idx}'])
-                    precio_publico_matriz = float(request.form[f'precio_publico_matriz_{idx}'])
-                    precio_publico_sigma = float(request.form[f'precio_publico_sigma_{idx}'])
-                    validado = request.form.get(f'validado_{idx}') == '1'
-                except:
-                    continue
+for key in request.form:
+    if key.startswith('tipo_'):
+        idx = key.split('_')[1]
+        tipo = request.form[f'tipo_{idx}']
+        id_elemento = request.form[f'id_{idx}']
+        
+        try:
+            maquila_matriz = float(request.form.get(f'maquila_matriz_{idx}', 0))
+            envio_matriz = float(request.form.get(f'envio_matriz_{idx}', 0))
+            maquila_sigma = float(request.form.get(f'maquila_sigma_{idx}', 0))
+            envio_sigma = float(request.form.get(f'envio_sigma_{idx}', 0))
+            ganancia = float(request.form[f'ganancia_{idx}'])
+            precio_publico_matriz = float(request.form[f'precio_publico_matriz_{idx}'])
+            precio_publico_sigma = float(request.form[f'precio_publico_sigma_{idx}'])
+            validado = request.form.get(f'validado_{idx}') == '1'
+        except:
+            continue
 
-                costo_matriz = maquila_matriz + envio_matriz
-                costo_sigma = maquila_sigma + envio_sigma
-                precio_sugerido_matriz = round(costo_matriz * (1 + ganancia / 100), 2)
-                precio_sugerido_sigma = round(costo_sigma * (1 + ganancia / 100), 2)
+        costo_matriz = maquila_matriz + envio_matriz
+        costo_sigma = maquila_sigma + envio_sigma
+        precio_sugerido_matriz = round(costo_matriz * (1 + ganancia / 100), 2)
+        precio_sugerido_sigma = round(costo_sigma * (1 + ganancia / 100), 2)
 
-                nuevos_precios.append({
-                    "tipo": tipo,
-                    "id_elemento": id_elemento,
-                    "costos": {
-    "matriz": {
-        "maquila": maquila_matriz,
-        "envio": envio_matriz
-    },
-    "sigma": {
-        "maquila": maquila_sigma,
-        "envio": envio_sigma
-    }
-}
-                    },
-                    "ganancia_porcentaje": ganancia,
-                    "precio_sugerido_matriz": precio_sugerido_matriz,
-                    "precio_sugerido_sigma": precio_sugerido_sigma,
-                    "precio_publico_matriz": precio_publico_matriz,
-                    "precio_publico_sigma": precio_publico_sigma,
-                    "validado": validado
-                })
+        nuevos_precios.append({
+            "tipo": tipo,
+            "id_elemento": id_elemento,
+            "costos": {
+                "matriz": {
+                    "maquila": maquila_matriz,
+                    "envio": envio_matriz
+                },
+                "sigma": {
+                    "maquila": maquila_sigma,
+                    "envio": envio_sigma
+                }
+            },
+            "ganancia_porcentaje": ganancia,
+            "precio_sugerido_matriz": precio_sugerido_matriz,
+            "precio_sugerido_sigma": precio_sugerido_sigma,
+            "precio_publico_matriz": precio_publico_matriz,
+            "precio_publico_sigma": precio_publico_sigma,
+            "validado": validado
+        })  # <-- Cierre correcto del append y del diccionario
 
         with open('datos/precios.json', 'w', encoding='utf-8') as f:
             json.dump(nuevos_precios, f, indent=4, ensure_ascii=False)
