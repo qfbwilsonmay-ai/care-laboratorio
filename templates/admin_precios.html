@@ -26,36 +26,39 @@
     <form method="POST" id="formPrecios">
         <table id="tablaPrecios">
             <tr>
-                <th>Prueba</th>
-                <th colspan="3">Costos - Matriz</th>
-                <th colspan="3">Costos - SIGMA</th>
-                <th>Ganancia (%)</th>
-                <th>P. Sugerido (Matriz)</th>
-                <th>P. Sugerido (SIGMA)</th>
-                <th>P. Público (Matriz)</th>
-                <th>P. con IVA (Matriz)</th>
-                <th>P. Público (SIGMA)</th>
-                <th>P. con IVA (SIGMA)</th>
-                <th>Acciones</th>
-            </tr>
+    <th></th>
+    <th>Maquila</th>
+    <th>Envío</th>
+    <th>Maquila</th>
+    <th>Envío</th>
+    <th></th>
+    <th></th>
+    <th></th>
+    <th></th>
+    <th></th>
+    <th></th>
+    <th></th>
+    <th></th>
+    <th></th>
+    <th></th>
+</tr>
             <tr>
-                <th></th>
-                <th>Maquila</th>
-                <th>Materiales</th>
-                <th>Envío</th>
-                <th>Maquila</th>
-                <th>Materiales</th>
-                <th>Envío</th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-            </tr>
+    <th></th>
+    <th>Maquila</th>
+    <th>Envío</th>
+    <th>Maquila</th>
+    <th>Envío</th>
+    <th></th>
+    <th></th>
+    <th></th>
+    <th></th>
+    <th></th>
+    <th></th>
+    <th></th>
+    <th></th>
+    <th></th>
+    <th></th>
+</tr>
             {% for p in pruebas %}
             {% set precio = precios_dict.get('prueba_' + p.clave) or {} %}
             {% set costos = precio.costos or {} %}
@@ -73,11 +76,11 @@
                 </td>
                 <!-- Costos Matriz -->
                 <td><input type="number" step="0.01" name="maquila_matriz_{{ loop.index }}" value="{{ matriz.maquila if matriz.maquila else 0 }}" class="costo" data-idx="{{ loop.index }}" {{ 'readonly' if validado else '' }}></td>
-                <td><input type="number" step="0.01" name="materiales_matriz_{{ loop.index }}" value="{{ matriz.materiales if matriz.materiales else 0 }}" class="costo" data-idx="{{ loop.index }}" {{ 'readonly' if validado else '' }}></td>
+<!-- Materiales eliminado --> value="{{ matriz.materiales if matriz.materiales else 0 }}" class="costo" data-idx="{{ loop.index }}" {{ 'readonly' if validado else '' }}></td>
                 <td><input type="number" step="0.01" name="envio_matriz_{{ loop.index }}" value="{{ matriz.envio if matriz.envio else 0 }}" class="costo" data-idx="{{ loop.index }}" {{ 'readonly' if validado else '' }}></td>
                 <!-- Costos SIGMA -->
                 <td><input type="number" step="0.01" name="maquila_sigma_{{ loop.index }}" value="{{ sigma.maquila if sigma.maquila else 0 }}" class="costo" data-idx="{{ loop.index }}" {{ 'readonly' if validado else '' }}></td>
-                <td><input type="number" step="0.01" name="materiales_sigma_{{ loop.index }}" value="{{ sigma.materiales if sigma.materiales else 0 }}" class="costo" data-idx="{{ loop.index }}" {{ 'readonly' if validado else '' }}></td>
+                <!-- Materiales eliminado --> value="{{ sigma.materiales if sigma.materiales else 0 }}" class="costo" data-idx="{{ loop.index }}" {{ 'readonly' if validado else '' }}></td>
                 <td><input type="number" step="0.01" name="envio_sigma_{{ loop.index }}" value="{{ sigma.envio if sigma.envio else 0 }}" class="costo" data-idx="{{ loop.index }}" {{ 'readonly' if validado else '' }}></td>
                 <!-- Ganancia -->
                 <td><input type="number" step="0.1" name="ganancia_{{ loop.index }}" value="{{ precio.ganancia_porcentaje if precio.ganancia_porcentaje else 50 }}" class="ganancia" data-idx="{{ loop.index }}" required {{ 'readonly' if validado else '' }}></td>
@@ -119,24 +122,23 @@
 
     <script>
         // Calcular precios sugeridos al escribir
-        function calcularSugeridos(idx) {
-            const maquilaMatriz = parseFloat(document.querySelector(`[name="maquila_matriz_${idx}"]`).value) || 0;
-            const materialesMatriz = parseFloat(document.querySelector(`[name="materiales_matriz_${idx}"]`).value) || 0;
-            const envioMatriz = parseFloat(document.querySelector(`[name="envio_matriz_${idx}"]`).value) || 0;
-            const maquilaSigma = parseFloat(document.querySelector(`[name="maquila_sigma_${idx}"]`).value) || 0;
-            const materialesSigma = parseFloat(document.querySelector(`[name="materiales_sigma_${idx}"]`).value) || 0;
-            const envioSigma = parseFloat(document.querySelector(`[name="envio_sigma_${idx}"]`).value) || 0;
-            const ganancia = parseFloat(document.querySelector(`[name="ganancia_${idx}"]`).value) || 0;
+        // Calcular precios sugeridos al escribir
+function calcularSugeridos(idx) {
+    const maquilaMatriz = parseFloat(document.querySelector(`[name="maquila_matriz_${idx}"]`).value) || 0;
+    const envioMatriz = parseFloat(document.querySelector(`[name="envio_matriz_${idx}"]`).value) || 0;
+    const maquilaSigma = parseFloat(document.querySelector(`[name="maquila_sigma_${idx}"]`).value) || 0;
+    const envioSigma = parseFloat(document.querySelector(`[name="envio_sigma_${idx}"]`).value) || 0;
+    const ganancia = parseFloat(document.querySelector(`[name="ganancia_${idx}"]`).value) || 0;
 
-            const costoMatriz = maquilaMatriz + materialesMatriz + envioMatriz;
-            const costoSigma = maquilaSigma + materialesSigma + envioSigma;
+    const costoMatriz = maquilaMatriz + envioMatriz;
+    const costoSigma = maquilaSigma + envioSigma;
 
-            const sugeridoMatriz = costoMatriz * (1 + ganancia / 100);
-            const sugeridoSigma = costoSigma * (1 + ganancia / 100);
+    const sugeridoMatriz = costoMatriz * (1 + ganancia / 100);
+    const sugeridoSigma = costoSigma * (1 + ganancia / 100);
 
-            document.getElementById(`sugerido_matriz_${idx}`).textContent = sugeridoMatriz.toFixed(2);
-            document.getElementById(`sugerido_sigma_${idx}`).textContent = sugeridoSigma.toFixed(2);
-        }
+    document.getElementById(`sugerido_matriz_${idx}`).textContent = sugeridoMatriz.toFixed(2);
+    document.getElementById(`sugerido_sigma_${idx}`).textContent = sugeridoSigma.toFixed(2);
+}
 
         // Validar fila: bloquea campos y pone verde
         function validarFila(idx) {
