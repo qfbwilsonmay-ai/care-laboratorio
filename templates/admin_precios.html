@@ -26,24 +26,32 @@
     <form method="POST" id="formPrecios">
         <table id="tablaPrecios">
             <tr>
-    <th></th>
+    <th rowspan="2">Prueba</th>
+    <th colspan="2" style="text-align:center; background:#0066cc; color:white;">Procesamiento</th>
     <th colspan="2" style="text-align:center; background:#0066cc; color:white;">Costos - Matriz</th>
     <th colspan="2" style="text-align:center; background:#0066cc; color:white;">Costos - SIGMA</th>
+    <th colspan="2" style="text-align:center; background:#0066cc; color:white;">Ganancia (60%)</th>
     <th colspan="2" style="text-align:center; background:#0066cc; color:white;">Precio Público Sugerido</th>
+    <th colspan="2" style="text-align:center; background:#0066cc; color:white;">Precio Final</th>
     <th colspan="2" style="text-align:center; background:#0066cc; color:white;">Precio Final con IVA</th>
-    <th></th>
+    <th rowspan="2">Acciones</th>
 </tr>
 <tr>
-    <th></th>
+    <th>Matriz</th>
+    <th>SIGMA</th>
     <th>Maquila</th>
     <th>Envío</th>
     <th>Maquila</th>
     <th>Envío</th>
-    <th>Precio</th>
-    <th>Con IVA</th>
-    <th>Precio</th>
-    <th>Con IVA</th>
-    <th></th>
+    <th>Matriz</th>
+    <th>SIGMA</th>
+    <th>Matriz</th>
+    <th>SIGMA</th>
+    <th>Matriz</th>
+    <th>SIGMA</th>
+    <th>Matriz</th>
+    <th>SIGMA</th>
+    <th>IVA</th>
 </tr>
             {% for p in pruebas %}
             {% set precio = precios_dict.get('prueba_' + p.clave) or {} %}
@@ -55,11 +63,30 @@
 
             <tr class="{{ clase_fila }}" id="fila_{{ loop.index }}">
                 <td>
-                    {{ p.nombre }}
-                    <input type="hidden" name="tipo_{{ loop.index }}" value="prueba">
-                    <input type="hidden" name="id_{{ loop.index }}" value="{{ p.clave }}">
-                    <input type="hidden" name="validado_{{ loop.index }}" id="validado_{{ loop.index }}" value="{{ '1' if validado else '0' }}">
-                </td>
+                <td>
+    {{ p.nombre }}
+    <input type="hidden" name="tipo_{{ loop.index }}" value="prueba">
+    <input type="hidden" name="id_{{ loop.index }}" value="{{ p.clave }}">
+    <input type="hidden" name="validado_{{ loop.index }}" id="validado_{{ loop.index }}" value="{{ '1' if validado else '0' }}">
+</td>
+<!-- Procesamiento -->
+<td><input type="checkbox" name="procesa_matriz_{{ loop.index }}" checked onchange="actualizarCampos({{ loop.index }})"></td>
+<td><input type="checkbox" name="procesa_sigma_{{ loop.index }}" checked onchange="actualizarCampos({{ loop.index }})"></td>
+<!-- Costos Matriz -->
+<td><input type="number" step="0.01" name="maquila_matriz_{{ loop.index }}" value="{{ matriz.maquila if matriz.maquila else 0 }}" class="costo" data-idx="{{ loop.index }}" {{ 'readonly' if validado else '' }}></td>
+<td><input type="number" step="0.01" name="envio_matriz_{{ loop.index }}" value="{{ matriz.envio if matriz.envio else 0 }}" class="costo" data-idx="{{ loop.index }}" {{ 'readonly' if validado else '' }}></td>
+<!-- Costos SIGMA -->
+<td><input type="number" step="0.01" name="maquila_sigma_{{ loop.index }}" value="{{ sigma.maquila if sigma.maquila else 0 }}" class="costo" data-idx="{{ loop.index }}" {{ 'readonly' if validado else '' }}></td>
+<td><input type="number" step="0.01" name="envio_sigma_{{ loop.index }}" value="{{ sigma.envio if sigma.envio else 0 }}" class="costo" data-idx="{{ loop.index }}" {{ 'readonly' if validado else '' }}></td>
+<!-- Ganancia (60%) -->
+<td class="sugerido" id="ganancia_matriz_{{ loop.index }}">{{ "%.2f"|format((matriz.maquila + matriz.envio) * 0.6 if matriz.maquila else 0) }}</td>
+<td class="sugerido" id="ganancia_sigma_{{ loop.index }}">{{ "%.2f"|format((sigma.maquila + sigma.envio) * 0.6 if sigma.maquila else 0) }}</td>
+<!-- Precio Público Sugerido -->
+<td class="sugerido" id="precio_sugerido_matriz_{{ loop.index }}">{{ "%.2f"|format((matriz.maquila + matriz.envio) * 1.6 if matriz.maquila else 0) }}</td>
+<td class="sugerido" id="precio_sugerido_sigma_{{ loop.index }}">{{ "%.2f"|format((sigma.maquila + sigma.envio) * 1.6 if sigma.maquila else 0) }}</td>
+<!-- Precio Final -->
+<td><input type="number" step="0.01" name="precio_final_matriz_{{ loop.index }}" value="{{ precio.precio_publico_matriz if precio.precio_publico_matriz else 0 }}" required {{ 'readonly' if validado else '' }} onchange="calcularConIVAFinal(this, 'precio_final_con_iva_matriz_{{ loop.index }}', 'iva_matriz_{{ loop.index }}')"></td>
+<td><input type="number" step="0.01" name="precio_final_sigma_{{ loop.index }}" value="{{ precio.precio_publico
                 <!-- Costos Matriz -->
                 <td><input type="number" step="0.01" name="maquila_matriz_{{ loop.index }}" value="{{ matriz.maquila if matriz.maquila else 0 }}" class="costo" data-idx="{{ loop.index }}" {{ 'readonly' if validado else '' }}></td>
 <td><input type="number" step="0.01" name="envio_matriz_{{ loop.index }}" value="{{ matriz.envio if matriz.envio else 0 }}" class="costo" data-idx="{{ loop.index }}" {{ 'readonly' if validado else '' }}></td>
@@ -121,6 +148,22 @@ function calcularSugeridos(idx) {
     document.getElementById(`sugerido_sigma_${idx}`).textContent = sugeridoSigma.toFixed(2);
 }
 
+function actualizarCampos(idx) {
+    const procesaMatriz = document.querySelector(`[name="procesa_matriz_${idx}"]`).checked;
+    const procesaSigma = document.querySelector(`[name="procesa_sigma_${idx}"]`).checked;
+
+    const inputsMatriz = document.querySelectorAll(`[name="maquila_matriz_${idx}"], [name="envio_matriz_${idx}"], [name="precio_final_matriz_${idx}"]`);
+    const inputsSigma = document.querySelectorAll(`[name="maquila_sigma_${idx}"], [name="envio_sigma_${idx}"], [name="precio_final_sigma_${idx}"]`);
+
+    inputsMatriz.forEach(input => {
+        input.disabled = !procesaMatriz;
+    });
+
+    inputsSigma.forEach(input => {
+        input.disabled = !procesaSigma;
+    });
+}
+
         // Validar fila: bloquea campos y pone verde
         function validarFila(idx) {
             const inputs = document.querySelectorAll(`#fila_${idx} input`);
@@ -146,6 +189,14 @@ function calcularSugeridos(idx) {
             document.querySelector(`#fila_${idx} td:last-child`).innerHTML = 
                 `<button type="button" class="btn-validar" onclick="validarFila(${idx})">Validar</button>`;
         }
+
+function calcularConIVAFinal(input, idConIVA, idIVA) {
+    const precio = parseFloat(input.value) || 0;
+    const precioConIVA = precio * 1.16;
+    const iva = precio * 0.16;
+    document.getElementById(idConIVA).textContent = precioConIVA.toFixed(2);
+    document.getElementById(idIVA).textContent = iva.toFixed(2);
+}
 
         // Calcular precio con IVA
         function calcularConIVA(input, idConIVA) {
