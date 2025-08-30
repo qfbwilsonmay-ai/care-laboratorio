@@ -10,7 +10,7 @@
     },
     {
         "clave": "BH",
-        "nombre": "Hemograma Completo",
+        "nombre": "Biometría Hemática",
         "tipo_muestra": "sangre total",
         "id_contenedor": 2,
         "unidad": "NO APLICA",
@@ -33,6 +33,15 @@
         "id_contenedor": 2,
         "unidad": "NO APLICA",
         "valores_normales": "NO APLICA",
+        "tipo": "cuantitativa"
+    },
+    {
+        "clave": "PCR",
+        "nombre": "Proteína C Reactiva (PCR)",
+        "tipo_muestra": "suero",
+        "id_contenedor": 1,
+        "unidad": "POSITIVO/NEGATIVO",
+        "valores_normales": "NEGATIVO",
         "tipo": "cuantitativa"
     }
 ]

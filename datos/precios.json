@@ -23,7 +23,7 @@
     },
     {
         "tipo": "prueba",
-        "id_elemento": "HEM",
+        "id_elemento": "BH",
         "costos": {
             "matriz": {
                 "maquila": 22.0,
@@ -67,12 +67,12 @@
     },
     {
         "tipo": "prueba",
-        "id_elemento": "GRP",
+        "id_elemento": "GPO",
         "costos": {
             "matriz": {
-                "maquila": 30.0,
-                "materiales": 5.0,
-                "envio": 0.0
+                "maquila": 25.0,
+                "materiales": 10.0,
+                "envio": 10.0
             },
             "sigma": {
                 "maquila": 55.0,
@@ -81,7 +81,7 @@
             }
         },
         "ganancia_porcentaje": 50.0,
-        "precio_sugerido_matriz": 52.5,
+        "precio_sugerido_matriz": 67.5,
         "precio_sugerido_sigma": 112.5,
         "precio_publico_matriz": 100.0,
         "precio_publico_sigma": 120.0,
