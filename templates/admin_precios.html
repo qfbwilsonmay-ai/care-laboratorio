@@ -45,40 +45,6 @@
     <th>Con IVA</th>
     <th></th>
 </tr>
-<tr>
-    <th></th>
-    <th>Maquila</th>
-    <th>Envío</th>
-    <th>Maquila</th>
-    <th>Envío</th>
-    <th></th>
-    <th></th>
-    <th></th>
-    <th></th>
-    <th></th>
-    <th></th>
-    <th></th>
-    <th></th>
-    <th></th>
-    <th></th>
-</tr>
-            <tr>
-    <th></th>
-    <th>Maquila</th>
-    <th>Envío</th>
-    <th>Maquila</th>
-    <th>Envío</th>
-    <th></th>
-    <th></th>
-    <th></th>
-    <th></th>
-    <th></th>
-    <th></th>
-    <th></th>
-    <th></th>
-    <th></th>
-    <th></th>
-</tr>
             {% for p in pruebas %}
             {% set precio = precios_dict.get('prueba_' + p.clave) or {} %}
             {% set costos = precio.costos or {} %}
