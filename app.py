@@ -168,12 +168,10 @@ def resumen(folio):
     subtotal = 0
     maquila_matriz = 0
     maquila_sigma = 0
+    envio = 0
 
     # Para envío: solo una vez por laboratorio
     laboratorios_con_envio = set()
-
-    # Para materiales: agrupar por (contenedor, laboratorio)
-    extracciones = set()
 
     # Lista de estudios con maquila
     estudios_con_maquila = []
@@ -213,15 +211,7 @@ def resumen(folio):
                 "precio": precio_publico
             })
 
-        # Buscar el id_contenedor de la prueba
-        prueba_info = next((p for p in pruebas if p['clave'] == clave), None)
-        if prueba_info:
-            id_contenedor = prueba_info.get('id_contenedor')
-            if id_contenedor:
-                extracciones.add((id_contenedor, procesado_en))
-
     # Calcular envío: una vez por laboratorio
-    envio = 0
     for laboratorio in laboratorios_con_envio:
         for estudio in paciente.get('estudios', []):
             clave = estudio['clave']
@@ -232,7 +222,7 @@ def resumen(folio):
             break
 
     total_maquila = maquila_matriz + maquila_sigma
-    ganancia = subtotal - (total_maquila + envio)
+    ganancia = subtotal - (total_maquila + envio)  # ❌ Ya no hay "materiales"
     iva = round(subtotal * 0.16, 2)
     total = subtotal + iva
 
@@ -246,7 +236,6 @@ def resumen(folio):
         maquila_matriz=round(maquila_matriz, 2),
         maquila_sigma=round(maquila_sigma, 2),
         total_maquila=round(total_maquila, 2),
-        materiales=round(materiales, 2),
         envio=round(envio, 2),
         ganancia=round(ganancia, 2)
     )
