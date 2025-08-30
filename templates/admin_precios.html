@@ -28,25 +28,33 @@
 
 <script>
     function filtrarTablaPrecios() {
-        const input = document.getElementById('buscadorPrecios');
-        const filter = input.value.toLowerCase().trim();
-        const filas = document.querySelectorAll('#tablaPrecios tbody tr');
+    const input = document.getElementById('buscadorPrecios');
+    const filter = input.value.toLowerCase().trim();
+    const filas = document.querySelectorAll('#tablaPrecios tbody tr');
 
-        if (filter === '') {
-            filas.forEach(el => el.style.display = '');
-            return;
-        }
-
-        filas.forEach(fila => {
-            const clave = fila.querySelector('td').textContent.toLowerCase();
-            const nombre = fila.querySelector('td:nth-child(2)').textContent.toLowerCase();
-            if (clave.includes(filter) || nombre.includes(filter)) {
-                fila.style.display = '';
-            } else {
-                fila.style.display = 'none';
-            }
-        });
+    if (filter === '') {
+        // Mostrar todas si está vacío
+        filas.forEach(el => el.style.display = '');
+        return;
     }
+
+    filas.forEach(fila => {
+        // La clave está en la primera celda (td[0])
+        // El nombre está en la segunda celda (td[1])
+        const celdas = fila.querySelectorAll('td');
+        if (celdas.length < 2) return; // Saltar filas sin datos
+
+        const clave = celdas[0].textContent.toLowerCase();
+        const nombre = celdas[1].textContent.toLowerCase();
+
+        if (clave.includes(filter) || nombre.includes(filter)) {
+            fila.style.display = '';
+        } else {
+            fila.style.display = 'none';
+        }
+    });
+}
+
 </script>
 
     <form method="POST" id="formPrecios">
