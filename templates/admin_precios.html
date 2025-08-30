@@ -23,9 +23,36 @@
     <a href="/" class="btn">← Inicio</a>
     <a href="/admin/pruebas" class="btn">Administrar Pruebas</a>
 
+<!-- Buscador -->
+<input type="text" id="buscadorPrecios" class="buscador" placeholder="Buscar por clave o nombre de prueba..." onkeyup="filtrarTablaPrecios()">
+
+<script>
+    function filtrarTablaPrecios() {
+        const input = document.getElementById('buscadorPrecios');
+        const filter = input.value.toLowerCase().trim();
+        const filas = document.querySelectorAll('#tablaPrecios tbody tr');
+
+        if (filter === '') {
+            filas.forEach(el => el.style.display = '');
+            return;
+        }
+
+        filas.forEach(fila => {
+            const clave = fila.querySelector('td').textContent.toLowerCase();
+            const nombre = fila.querySelector('td:nth-child(2)').textContent.toLowerCase();
+            if (clave.includes(filter) || nombre.includes(filter)) {
+                fila.style.display = '';
+            } else {
+                fila.style.display = 'none';
+            }
+        });
+    }
+</script>
+
     <form method="POST" id="formPrecios">
         <table id="tablaPrecios">
             <tr>
+    <th rowspan="2">Clave</th>
     <th rowspan="2">Prueba</th>
     <th colspan="2" style="text-align:center; background:#0066cc; color:white;">Procesamiento</th>
     <th colspan="2" style="text-align:center; background:#0066cc; color:white;">Costos - Matriz</th>
@@ -57,17 +84,18 @@
             {% set precio = precios_dict.get('prueba_' + p.clave) or {} %}
             {% set costos = precio.costos or {} %}
             {% set matriz = costos.matriz or {} %}
-            {% set sigma = costos.sigma or {} %}
+            {% set sigma = costos.sigma or {} %}<form method="POST" id="formPrecios">
             {% set validado = precio.validado or false %}
             {% set clase_fila = "fila-validada" if validado else "fila-normal" %}
 
             <tr class="{{ clase_fila }}" id="fila_{{ loop.index }}">
-    <td>
-        {{ p.nombre }}
-        <input type="hidden" name="tipo_{{ loop.index }}" value="prueba">
-        <input type="hidden" name="id_{{ loop.index }}" value="{{ p.clave }}">
-        <input type="hidden" name="validado_{{ loop.index }}" id="validado_{{ loop.index }}" value="{{ '1' if validado else '0' }}">
-    </td>
+    <td>{{ p.clave }}</td>
+<td>
+    {{ p.nombre }}
+    <input type="hidden" name="tipo_{{ loop.index }}" value="prueba">
+    <input type="hidden" name="id_{{ loop.index }}" value="{{ p.clave }}">
+    <input type="hidden" name="validado_{{ loop.index }}" id="validado_{{ loop.index }}" value="{{ '1' if validado else '0' }}">
+</td>
     <!-- Procesamiento -->
     <td><input type="checkbox" name="procesa_matriz_{{ loop.index }}" checked onchange="actualizarCampos({{ loop.index }})"></td>
     <td><input type="checkbox" name="procesa_sigma_{{ loop.index }}" checked onchange="actualizarCampos({{ loop.index }})"></td>
@@ -115,16 +143,23 @@ function calcularSugeridos(idx) {
     const envioMatriz = parseFloat(document.querySelector(`[name="envio_matriz_${idx}"]`).value) || 0;
     const maquilaSigma = parseFloat(document.querySelector(`[name="maquila_sigma_${idx}"]`).value) || 0;
     const envioSigma = parseFloat(document.querySelector(`[name="envio_sigma_${idx}"]`).value) || 0;
-    const ganancia = parseFloat(document.querySelector(`[name="ganancia_${idx}"]`).value) || 0;
 
     const costoMatriz = maquilaMatriz + envioMatriz;
     const costoSigma = maquilaSigma + envioSigma;
 
-    const sugeridoMatriz = costoMatriz * (1 + ganancia / 100);
-    const sugeridoSigma = costoSigma * (1 + ganancia / 100);
+    // Ganancia del 60% (fija)
+    const gananciaMatriz = (costoMatriz * 0.6).toFixed(2);
+    const gananciaSigma = (costoSigma * 0.6).toFixed(2);
 
-    document.getElementById(`sugerido_matriz_${idx}`).textContent = sugeridoMatriz.toFixed(2);
-    document.getElementById(`sugerido_sigma_${idx}`).textContent = sugeridoSigma.toFixed(2);
+    // Precio sugerido = costo + 60% de ganancia
+    const precioSugeridoMatriz = (costoMatriz * 1.6).toFixed(2);
+    const precioSugeridoSigma = (costoSigma * 1.6).toFixed(2);
+
+    // Actualizar en pantalla
+    document.getElementById(`ganancia_matriz_${idx}`).textContent = gananciaMatriz;
+    document.getElementById(`ganancia_sigma_${idx}`).textContent = gananciaSigma;
+    document.getElementById(`precio_sugerido_matriz_${idx}`).textContent = precioSugeridoMatriz;
+    document.getElementById(`precio_sugerido_sigma_${idx}`).textContent = precioSugeridoSigma;
 }
 
 function actualizarCampos(idx) {
@@ -186,12 +221,12 @@ function calcularConIVAFinal(input, idConIVA, idIVA) {
         }
 
         // Escuchar cambios en costos y ganancia
-        document.querySelectorAll('.costo, .ganancia').forEach(input => {
-            input.addEventListener('input', function() {
-                const idx = this.getAttribute('data-idx');
-                calcularSugeridos(idx);
-            });
-        });
+        document.querySelectorAll('input[name^="maquila_"], input[name^="envio_"]').forEach(input => {
+    input.addEventListener('input', function() {
+        const idx = this.name.split('_')[2];
+        calcularSugeridos(idx);
+    });
+});
 
         // Calcular todos al cargar
         document.querySelectorAll('.costo').forEach(input => {
